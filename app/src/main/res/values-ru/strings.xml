@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ярлык метки</string>
+    <string name="shortcut_entry_label">Метка контактов</string>
+    <string name="pick_label">Выберите метку</string>
+    <string name="create_shortcut">Создать ярлык</string>
+    <string name="no_permission">Нужен доступ к контактам, чтобы показать метки</string>
+    <string name="no_labels">Метки контактов не найдены</string>
+    <string name="no_contacts">Нет контактов с этой меткой</string>
+    <string name="label_not_found">Метка не найдена. Создайте ярлык заново.</string>
+    <string name="pin_not_supported">Этот лаунчер не умеет добавлять ярлыки</string>
+    <string name="instructions">Добавьте на рабочий стол ярлык, который открывает контакты с выбранной меткой.\n\nНажмите кнопку ниже или добавьте ярлык из лаунчера: долгое нажатие на рабочем столе → Виджеты → Ярлык метки → Метка контактов.\n\nМетка откроется в приложении контактов по умолчанию. Если оно не умеет открывать метки, будет показан список контактов метки.</string>
+</resources>
