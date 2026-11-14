@@ -14,7 +14,7 @@
 
 Tap the button below, or add a shortcut from the launcher: long-press the home screen → Widgets → Contact Label Shortcut → Contact label.
 
-Choose below where labels open: a contacts app or \"Contact Label Shortcut list\". The list opens instantly and has buttons to call, send an SMS or open a chat in a messenger. Long-press the call or SMS button to choose a number. The magnifier at the top searches by name or number. Long-press a messenger button for its calls. Swipes and long press on a contact are set below.</string>
+Choose below where labels open: a contacts app or \"Contact Label Shortcut list\". The list opens instantly and has buttons to call, send an SMS or open a chat in a messenger. Long-press the call or SMS button to choose a number. The magnifier at the top searches by name or number. Long-press a messenger button for its calls. Which buttons to show, swipes and long press on a contact are set below.</string>
     <string name="open_with_title">Open labels in</string>
     <string name="open_with_system">System choice (default app or ask)</string>
     <string name="action_call">Call</string>
@@ -51,4 +51,7 @@ Choose below where labels open: a contacts app or \"Contact Label Shortcut list\
     <string name="icon_save">Save</string>
     <string name="no_pinned_shortcuts">No label shortcuts on the home screen yet</string>
     <string name="icon_update_failed">The launcher did not accept the new icon</string>
+    <string name="buttons_title">Buttons in a row</string>
+    <string name="buttons_messengers">Messengers</string>
+    <string name="buttons_more_only">Only ⋮ (all actions in the menu)</string>
 </resources>

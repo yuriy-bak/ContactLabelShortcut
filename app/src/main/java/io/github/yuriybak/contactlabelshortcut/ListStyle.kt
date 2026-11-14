@@ -24,6 +24,12 @@ data class ListStyle(
     val showSms: Boolean = true,
     val showChats: Boolean = true,
 ) {
+    /** Some buttons are hidden: the "more" button then opens the menu of all actions. */
+    val hidesActions: Boolean get() = !showCall || !showSms || !showChats
+
+    /** No buttons but "more": it goes on the name line, rows are one line high. */
+    val moreOnly: Boolean get() = !showCall && !showSms && !showChats
+
     companion object {
         val DEFAULT = ListStyle()
     }

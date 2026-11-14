@@ -29,6 +29,7 @@ class SwipeTarget(val icon: Drawable?, val iconSize: Int, val color: Int, val ru
  * - the button line is reserved even before the buttons are loaded, so rows do not jump;
  * - the name is never cut: what does not fit on the first line goes on the second line,
  *   before the buttons, and if it does not fit there either, the row grows.
+ * With [ListStyle.moreOnly] there is no button line: the "more" button is on the name line.
  *
  * A horizontal swipe moves the row and shows [SwipeTarget] under it; touch handling costs
  * nothing until a finger moves sideways.
@@ -123,6 +124,19 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
 
         actions.measure(unspecified, unspecified)
         trailing.measure(unspecified, unspecified)
+
+        if (style.moreOnly) {
+            // One line: the name (wrapping if it must) and the "more" button, whose place is kept
+            if (name.text.toString() != nameText.toString()) name.text = nameText
+            nameRest.text = ""
+            splitWidth = -1
+            val nameWidth = max(textAvailable - actionLine - restGap, 0)
+            name.measure(MeasureSpec.makeMeasureSpec(nameWidth, MeasureSpec.AT_MOST), unspecified)
+            nameRest.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY))
+            val content = maxOf(avatarHeight, name.measuredHeight, actionLine)
+            setMeasuredDimension(width, max(content + paddingTop + paddingBottom, context.dp(ONE_LINE_MIN_HEIGHT)))
+            return
+        }
 
         split(textAvailable)
         name.measure(MeasureSpec.makeMeasureSpec(textAvailable, MeasureSpec.AT_MOST), unspecified)
@@ -276,6 +290,15 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
             textStart += avatarSize + avatarGap
         }
 
+        if (style.moreOnly) {
+            place(name, textStart, centerY - name.measuredHeight / 2)
+            place(nameRest, textStart, centerY)
+            val trailingStart = width - endPad - trailing.measuredWidth
+            place(trailing, trailingStart, centerY - trailing.measuredHeight / 2)
+            place(actions, trailingStart - actions.measuredWidth, centerY - actions.measuredHeight / 2)
+            return
+        }
+
         val hasRest = nameRest.text.isNotEmpty()
         val rest = if (hasRest) nameRest.measuredHeight else 0
         val second = if (restBeside) max(actionLine, rest) else rest + actionLine
@@ -297,6 +320,9 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
     private companion object {
         /** Part of the row width to swipe for the action to run. */
         const val SWIPE_THRESHOLD = 0.3f
+
+        /** Row height without a button line, in dp. */
+        const val ONE_LINE_MIN_HEIGHT = 56
     }
 }
 

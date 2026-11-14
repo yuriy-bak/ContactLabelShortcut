@@ -82,5 +82,27 @@ object Settings {
         prefs(context).edit().putString(gesture.key, value).apply()
     }
 
+    /** Buttons shown in a row of the label list. */
+    enum class RowButton(val key: String, val title: Int) {
+        CALL("show_call", R.string.action_call),
+        SMS("show_sms", R.string.action_sms),
+        CHATS("show_chats", R.string.buttons_messengers),
+    }
+
+    fun showButton(context: Context, button: RowButton): Boolean = prefs(context).getBoolean(button.key, true)
+
+    fun setShowButton(context: Context, button: RowButton, show: Boolean) {
+        prefs(context).edit().putBoolean(button.key, show).apply()
+    }
+
+    fun listStyle(context: Context): ListStyle {
+        val prefs = prefs(context)
+        return ListStyle.DEFAULT.copy(
+            showCall = prefs.getBoolean(RowButton.CALL.key, true),
+            showSms = prefs.getBoolean(RowButton.SMS.key, true),
+            showChats = prefs.getBoolean(RowButton.CHATS.key, true),
+        )
+    }
+
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 }

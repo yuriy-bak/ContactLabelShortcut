@@ -17,6 +17,7 @@ class MainActivity : Activity() {
 
     private lateinit var openWithButton: Button
     private val gestureButtons = HashMap<Gesture, Button>()
+    private lateinit var rowButtonsButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +58,17 @@ class MainActivity : Activity() {
         layout.addView(openWithButton, wrap())
 
         layout.addView(TextView(this).apply {
+            setText(R.string.buttons_title)
+            textSize = 16f
+        }, wrap().apply { topMargin = pad * 3 / 2 })
+
+        rowButtonsButton = Button(this).apply {
+            isAllCaps = false
+            setOnClickListener { chooseRowButtons() }
+        }
+        layout.addView(rowButtonsButton, wrap())
+
+        layout.addView(TextView(this).apply {
             setText(R.string.gestures_title)
             textSize = 16f
         }, wrap().apply { topMargin = pad * 3 / 2 })
@@ -79,6 +91,7 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         openWithButton.text = Settings.openWithName(this)
+        rowButtonsButton.text = rowButtonsText()
         for ((gesture, button) in gestureButtons) {
             button.text = gestureText(gesture, GestureActions.name(this, Settings.gestureAction(this, gesture)))
         }
@@ -96,6 +109,26 @@ class MainActivity : Activity() {
                 gestureButtons[gesture]?.text = gestureText(gesture, choices[which].second)
                 dialog.dismiss()
             }
+            .show()
+    }
+
+    /** "Call, Send SMS, Messengers", or "Only ⋮" when all are hidden. */
+    private fun rowButtonsText(): CharSequence {
+        val shown = Settings.RowButton.values().filter { Settings.showButton(this, it) }
+        return if (shown.isEmpty()) getString(R.string.buttons_more_only)
+            else shown.joinToString(", ") { getString(it.title) }
+    }
+
+    private fun chooseRowButtons() {
+        val buttons = Settings.RowButton.values()
+        val checked = buttons.map { Settings.showButton(this, it) }.toBooleanArray()
+        AlertDialog.Builder(this)
+            .setTitle(R.string.buttons_title)
+            .setMultiChoiceItems(buttons.map { getString(it.title) }.toTypedArray(), checked) { _, which, isChecked ->
+                Settings.setShowButton(this, buttons[which], isChecked)
+                rowButtonsButton.text = rowButtonsText()
+            }
+            .setPositiveButton(android.R.string.ok, null)
             .show()
     }
 

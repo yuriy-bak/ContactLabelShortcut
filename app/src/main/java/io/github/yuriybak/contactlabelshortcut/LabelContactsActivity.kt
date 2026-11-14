@@ -48,7 +48,7 @@ class LabelContactsActivity : Activity() {
         val searchName: String by lazy(LazyThreadSafetyMode.NONE) { SearchText.normalize(name) }
     }
 
-    private val style = ListStyle.DEFAULT
+    private lateinit var style: ListStyle
     private lateinit var executor: ExecutorService
     private lateinit var avatars: AvatarLoader
     private lateinit var iconTint: ColorStateList
@@ -73,6 +73,7 @@ class LabelContactsActivity : Activity() {
             ?: getString(R.string.app_name)
 
         val items = if (groupId >= 0 && permitted) load(groupId) else emptyList()
+        style = Settings.listStyle(this)
 
         if (items.isEmpty()) {
             setContentView(TextView(this).apply {
@@ -234,7 +235,11 @@ class LabelContactsActivity : Activity() {
                     onLongClick = { showMessenger(it, messenger) }))
             }
         }
-        if (details.other.isNotEmpty()) {
+        if (style.hidesActions) {
+            // Hidden buttons are in the menu of all actions, so it is always there
+            row.trailing.addView(button(R.drawable.ic_more, R.string.action_more,
+                onClick = { showAllActions(item) }, onLongClick = null))
+        } else if (details.other.isNotEmpty()) {
             row.trailing.addView(button(R.drawable.ic_more, R.string.action_more,
                 onClick = { showMore(it, details.other) }, onLongClick = null))
         }
