@@ -2,8 +2,10 @@ package io.github.yuriybak.contactlabelshortcut
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.ContentUris
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.provider.ContactsContract.Groups
 import android.widget.Toast
@@ -36,19 +38,66 @@ class OpenLabelActivity : Activity() {
             .setDataAndType(ContentUris.withAppendedId(Groups.CONTENT_URI, label.id), Groups.CONTENT_ITEM_TYPE)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        try {
-            startActivity(view)
-        } catch (e: ActivityNotFoundException) {
-            startActivity(
-                label.putInto(Intent(this, LabelContactsActivity::class.java))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
-        } catch (e: SecurityException) {
-            startActivity(
-                label.putInto(Intent(this, LabelContactsActivity::class.java))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
+        val target = chooseTarget(view)
+        if (target == null) {
+            openFallback(label)
+        } else {
+            try {
+                startActivity(target)
+            } catch (e: ActivityNotFoundException) {
+                openFallback(label)
+            } catch (e: SecurityException) {
+                openFallback(label)
+            }
         }
         finish()
+    }
+
+    /**
+     * Returns the intent to start, or null to show our own list of the label's contacts.
+     * Apps from [BROKEN_PACKAGES] declare the group MIME type but cannot show a group,
+     * so they are skipped.
+     */
+    private fun chooseTarget(view: Intent): Intent? {
+        val pm = packageManager
+        val handlers = pm.queryIntentActivities(view, PackageManager.MATCH_DEFAULT_ONLY)
+            .map { it.activityInfo }
+        val good = handlers.filter { it.packageName !in BROKEN_PACKAGES }
+        if (good.isEmpty()) return null
+
+        val default = pm.resolveActivity(view, PackageManager.MATCH_DEFAULT_ONLY)?.activityInfo
+        // The default contacts app cannot open labels: show our own list, its items open in that app.
+        if (default != null && default.packageName in BROKEN_PACKAGES) return null
+        if (default != null && good.any { it.packageName == default.packageName && it.name == default.name }) {
+            // A working app is set as default: let the system open it.
+            return view
+        }
+        if (good.size == 1) {
+            return Intent(view).setComponent(ComponentName(good[0].packageName, good[0].name))
+        }
+        // Several working apps and no usable default: show the chooser without broken apps.
+        val excluded = handlers.filter { it.packageName in BROKEN_PACKAGES }
+            .map { ComponentName(it.packageName, it.name) }
+        return Intent.createChooser(view, null)
+            .putExtra(Intent.EXTRA_EXCLUDE_COMPONENTS, excluded.toTypedArray())
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    private fun openFallback(label: Label) {
+        startActivity(
+            label.putInto(Intent(this, LabelContactsActivity::class.java))
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+
+    companion object {
+        /** Contacts apps that accept the group intent but treat the group id as a contact id. */
+        private val BROKEN_PACKAGES = setOf(
+            "org.fossify.contacts",
+            "org.fossify.contacts.debug",
+            "com.simplemobiletools.contacts.pro",
+            "com.simplemobiletools.contacts.pro.debug",
+            "com.simplemobiletools.contacts",
+        )
     }
 }
