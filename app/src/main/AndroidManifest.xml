@@ -3,14 +3,6 @@
 
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
-    <!-- To see which apps can open a label (package visibility, Android 11+) -->
-    <queries>
-        <intent>
-            <action android:name="android.intent.action.VIEW" />
-            <data android:mimeType="vnd.android.cursor.item/group" />
-        </intent>
-    </queries>
-
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
