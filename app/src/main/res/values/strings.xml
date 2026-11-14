@@ -14,11 +14,14 @@
 
 Tap the button below, or add a shortcut from the launcher: long-press the home screen → Widgets → Contact Label Shortcut → Contact label.
 
-Choose below where labels open: a contacts app or \"Contact Label Shortcut list\". The list opens instantly and has buttons to call, send an SMS or open a chat in a messenger. Long-press the call or SMS button to choose a number.</string>
+Choose below where labels open: a contacts app or \"Contact Label Shortcut list\". The list opens instantly and has buttons to call, send an SMS or open a chat in a messenger. Long-press the call or SMS button to choose a number. The magnifier at the top searches by name or number.</string>
     <string name="open_with_title">Open labels in</string>
     <string name="open_with_system">System choice (default app or ask)</string>
     <string name="action_call">Call</string>
     <string name="action_sms">Send SMS</string>
     <string name="action_more">More</string>
     <string name="no_app">No app can open this</string>
+    <string name="action_search">Search</string>
+    <string name="search_hint">Name or number</string>
+    <string name="nothing_found">Nothing found</string>
 </resources>

@@ -11,13 +11,19 @@ import android.net.Uri
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.provider.ContactsContract.CommonDataKinds.GroupMembership
+import android.view.Gravity
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
 import android.widget.BaseAdapter
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.PopupMenu
+import android.widget.SearchView
 import android.widget.TextView
 import android.widget.Toast
 import java.util.concurrent.ExecutorService
@@ -28,17 +34,23 @@ import java.util.concurrent.Executors
  * or use the buttons to call, send an SMS or open a chat in a messenger.
  *
  * The names are shown at once; phones, messengers and photos are loaded in the background.
+ * The search in the action bar filters by name or number; it costs nothing until it is used.
  */
 class LabelContactsActivity : Activity() {
 
     private class Item(val contactId: Long, val lookupKey: String, val name: String, val photoUri: String?) {
         var details: ContactDetails = ContactDetails.EMPTY
+
+        /** [name] prepared for search; computed on the first search, not when the list opens. */
+        val searchName: String by lazy(LazyThreadSafetyMode.NONE) { SearchText.normalize(name) }
     }
 
     private val style = ListStyle.DEFAULT
     private lateinit var executor: ExecutorService
     private lateinit var avatars: AvatarLoader
     private lateinit var iconTint: ColorStateList
+    private lateinit var adapter: Adapter
+    private var query = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,11 +83,23 @@ class LabelContactsActivity : Activity() {
             tint
         }
 
-        val adapter = Adapter(items)
-        setContentView(ListView(this).apply {
+        adapter = Adapter(items)
+        val list = ListView(this).apply {
             this.adapter = adapter
             divider = null
+        }
+        val empty = TextView(this).apply {
+            setText(R.string.nothing_found)
+            gravity = Gravity.CENTER_HORIZONTAL
+            val pad = dp(24)
+            setPadding(pad, pad, pad, pad)
+            visibility = View.GONE
+        }
+        list.emptyView = empty
+        setContentView(FrameLayout(this).apply {
             fitsSystemWindows = true
+            addView(list)
+            addView(empty, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT))
         })
 
         executor.execute {
@@ -83,7 +107,8 @@ class LabelContactsActivity : Activity() {
             runOnUiThread {
                 if (isDestroyed) return@runOnUiThread
                 for (item in items) item.details = details[item.contactId] ?: ContactDetails.EMPTY
-                adapter.notifyDataSetChanged()
+                // A number typed before the phones were loaded can match now
+                if (query.isNotEmpty()) adapter.filter(query) else adapter.notifyDataSetChanged()
             }
         }
     }
@@ -93,16 +118,78 @@ class LabelContactsActivity : Activity() {
         super.onDestroy()
     }
 
+    /**
+     * The search button is a plain menu item; the [SearchView] is created only when it is
+     * tapped, so a list that is not searched pays nothing for it.
+     */
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        if (!::adapter.isInitialized) return false
+        val tint = (actionBar?.themedContext ?: this)
+            .obtainStyledAttributes(intArrayOf(android.R.attr.colorControlNormal)).run {
+                val color = getColorStateList(0)
+                recycle()
+                color
+            }
+        val item = menu.add(Menu.NONE, R.id.action_search, Menu.NONE, R.string.action_search)
+        item.icon = getDrawable(R.drawable.ic_search)?.mutate()?.apply { if (tint != null) setTintList(tint) }
+        item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS or MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW)
+        item.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+            override fun onMenuItemActionExpand(item: MenuItem) = true
+            override fun onMenuItemActionCollapse(item: MenuItem): Boolean {
+                (item.actionView as? SearchView)?.setQuery("", false)
+                search("")
+                return true
+            }
+        })
+        item.setOnMenuItemClickListener {
+            if (it.actionView == null) it.actionView = createSearchView()
+            it.expandActionView()
+            true
+        }
+        return true
+    }
+
+    private fun createSearchView() = SearchView(actionBar?.themedContext ?: this).apply {
+        queryHint = getString(R.string.search_hint)
+        imeOptions = EditorInfo.IME_ACTION_SEARCH or EditorInfo.IME_FLAG_NO_EXTRACT_UI
+        maxWidth = Int.MAX_VALUE
+        setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextChange(newText: String): Boolean {
+                search(newText)
+                return true
+            }
+
+            override fun onQueryTextSubmit(text: String): Boolean {
+                clearFocus() // hides the keyboard so that the results can be seen
+                return true
+            }
+        })
+    }
+
+    private fun search(text: String) {
+        if (text == query) return
+        query = text
+        adapter.filter(text)
+    }
+
     private inner class Adapter(private val items: List<Item>) : BaseAdapter() {
-        override fun getCount() = items.size
-        override fun getItem(position: Int) = items[position]
-        override fun getItemId(position: Int) = items[position].contactId
+        private var shown = items
+
+        override fun getCount() = shown.size
+        override fun getItem(position: Int) = shown[position]
+        override fun getItemId(position: Int) = shown[position].contactId
         override fun hasStableIds() = true
 
         override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
             val row = convertView as? ContactRow ?: ContactRow(this@LabelContactsActivity, style)
-            bind(row, items[position])
+            bind(row, shown[position])
             return row
+        }
+
+        fun filter(text: String) {
+            val search = SearchText(text)
+            shown = if (search.isEmpty) items else items.filter { search.matches(it.searchName, it.details.phones) }
+            notifyDataSetChanged()
         }
     }
 

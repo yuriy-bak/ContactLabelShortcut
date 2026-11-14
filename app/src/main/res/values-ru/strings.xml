@@ -13,11 +13,14 @@
 
 Нажмите кнопку ниже или добавьте ярлык из лаунчера: долгое нажатие на рабочем столе → Виджеты → Contact Label Shortcut → Метка контактов.
 
-Ниже выберите, где открывать метку: в приложении контактов или в списке Contact Label Shortcut. Список открывается мгновенно, в нём есть кнопки звонка, SMS и чатов в мессенджерах. Долгое нажатие на кнопку звонка или SMS — выбор номера.</string>
+Ниже выберите, где открывать метку: в приложении контактов или в списке Contact Label Shortcut. Список открывается мгновенно, в нём есть кнопки звонка, SMS и чатов в мессенджерах. Долгое нажатие на кнопку звонка или SMS — выбор номера. Лупа вверху — поиск по имени или номеру.</string>
     <string name="open_with_title">Открывать метку в</string>
     <string name="open_with_system">Системный выбор (приложение по умолчанию или вопрос)</string>
     <string name="action_call">Позвонить</string>
     <string name="action_sms">Написать SMS</string>
     <string name="action_more">Ещё</string>
     <string name="no_app">Нет приложения, чтобы это открыть</string>
+    <string name="action_search">Поиск</string>
+    <string name="search_hint">Имя или номер</string>
+    <string name="nothing_found">Ничего не найдено</string>
 </resources>
