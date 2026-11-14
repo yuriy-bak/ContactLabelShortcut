@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Contact Label Shortcut</string>
+    <string name="app_name" translatable="false">Contact Label Shortcut</string>
     <string name="shortcut_entry_label">Contact label</string>
     <string name="pick_label">Choose a label</string>
     <string name="create_shortcut">Create shortcut</string>

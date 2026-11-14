@@ -136,9 +136,10 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
         background = context.themeDrawable(android.R.attr.selectableItemBackground)
     }
 
-    /** A button view and the app icon it shows (the drawable it was copied from). */
+    /** A button view and what it shows: an app icon (the drawable it was copied from) or our icon. */
     private class ButtonSlot(val view: ImageView) {
         var source: Drawable? = null
+        var res = 0
     }
 
     /** Shows [list] as the buttons and [more] (or nothing) at the end; the views are reused. */
@@ -183,11 +184,13 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
                 view.imageTintList = null
                 view.setImageDrawable(app.constantState?.newDrawable(resources) ?: app)
                 slot.source = app
+                slot.res = 0
             }
-        } else {
-            slot.source = null
-            view.setImageResource(action.iconRes) // nothing is done if it already shows it
+        } else if (slot.res != action.iconRes) {
+            view.setImageResource(action.iconRes)
             view.imageTintList = iconTint
+            slot.source = null
+            slot.res = action.iconRes
         }
         view.contentDescription = action.description
         view.setOnClickListener { action.onClick() }
