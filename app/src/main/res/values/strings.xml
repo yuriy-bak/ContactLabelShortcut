@@ -60,4 +60,5 @@ Choose below where labels open: a contacts app or \"Contact Label Shortcut list\
     <string name="inline_buttons_title">Buttons on the name line</string>
     <string name="inline_buttons_never">Buttons always on the second line</string>
     <string name="inline_buttons_up_to">Up to %1$d buttons on the name line</string>
+    <string name="action_settings">Settings</string>
 </resources>

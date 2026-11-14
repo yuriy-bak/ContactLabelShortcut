@@ -135,15 +135,36 @@ class LabelContactsActivity : Activity() {
      * tapped, so a list that is not searched pays nothing for it.
      */
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        if (!::adapter.isInitialized) return false
         val tint = (actionBar?.themedContext ?: this)
             .obtainStyledAttributes(intArrayOf(android.R.attr.colorControlNormal)).run {
                 val color = getColorStateList(0)
                 recycle()
                 color
             }
+        fun tinted(res: Int) = getDrawable(res)?.mutate()?.apply { if (tint != null) setTintList(tint) }
+
+        if (::adapter.isInitialized) addSearch(menu, tinted(R.drawable.ic_search))
+
+        menu.add(Menu.NONE, R.id.action_settings, Menu.NONE, R.string.action_settings).apply {
+            icon = tinted(R.drawable.ic_settings)
+            setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
+            setOnMenuItemClickListener {
+                startActivityForResult(Intent(this@LabelContactsActivity, MainActivity::class.java), REQUEST_SETTINGS)
+                true
+            }
+        }
+        return true
+    }
+
+    /** Back from the settings: show the list as they say now (buttons, gestures). */
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_SETTINGS) recreate()
+    }
+
+    private fun addSearch(menu: Menu, searchIcon: Drawable?) {
         val item = menu.add(Menu.NONE, R.id.action_search, Menu.NONE, R.string.action_search)
-        item.icon = getDrawable(R.drawable.ic_search)?.mutate()?.apply { if (tint != null) setTintList(tint) }
+        item.icon = searchIcon
         item.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS or MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW)
         item.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem) = true
@@ -158,7 +179,6 @@ class LabelContactsActivity : Activity() {
             it.expandActionView()
             true
         }
-        return true
     }
 
     private fun createSearchView() = SearchView(actionBar?.themedContext ?: this).apply {
@@ -467,6 +487,7 @@ class LabelContactsActivity : Activity() {
     }
 
     private companion object {
+        const val REQUEST_SETTINGS = 1
         const val COLOR_CALL = 0xFF2E7D32.toInt()
         const val COLOR_SMS = 0xFF1565C0.toInt()
         const val COLOR_MESSENGER = 0xFF00796B.toInt()
