@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Label Shortcut</string>
+    <string name="app_name" translatable="false">Contact Label Shortcut</string>
     <string name="shortcut_entry_label">Contact label</string>
     <string name="pick_label">Choose a label</string>
     <string name="create_shortcut">Create shortcut</string>
@@ -9,5 +9,63 @@
     <string name="no_contacts">No contacts with this label</string>
     <string name="label_not_found">The label was not found. Create the shortcut again.</string>
     <string name="pin_not_supported">This launcher cannot add shortcuts</string>
-    <string name="instructions">Add a home screen shortcut that opens contacts with a chosen label.\n\nTap the button below, or add a shortcut from the launcher: long-press the home screen → Widgets → Label Shortcut → Contact label.\n\nThe label opens in your default contacts app. If it cannot open labels, a list of the label\'s contacts is shown.</string>
+    <string name="label_list_entry">Contact Label Shortcut list</string>
+    <string name="instructions">Add a home screen shortcut that opens contacts with a chosen label.
+
+Tap the button below, or add a shortcut from the launcher: long-press the home screen → Widgets → Contact Label Shortcut → Contact label.
+
+Choose below where labels open: a contacts app or \"Contact Label Shortcut list\". The list opens instantly and has buttons to call, send an SMS or open a chat in a messenger. Long-press the call or SMS button to choose a number. The magnifier at the top searches by name or number. Long-press a messenger button for its calls. Which buttons to show, swipes and long press on a contact are set below.</string>
+    <string name="open_with_title">Open labels in</string>
+    <string name="open_with_system">System choice (default app or ask)</string>
+    <string name="action_call">Call</string>
+    <string name="action_sms">Send SMS</string>
+    <string name="action_more">More</string>
+    <string name="no_app">No app can open this</string>
+    <string name="action_search">Search</string>
+    <string name="search_hint">Name or number</string>
+    <string name="nothing_found">Nothing found</string>
+    <string name="gestures_title">Gestures in the list</string>
+    <string name="gesture_swipe_right">Swipe right</string>
+    <string name="gesture_swipe_left">Swipe left</string>
+    <string name="gesture_long_press">Long press</string>
+    <string name="ga_none">Nothing</string>
+    <string name="ga_menu">Menu of all actions</string>
+    <string name="ga_open">Open contact</string>
+    <string name="ga_edit">Edit contact</string>
+    <string name="ga_copy">Copy number</string>
+    <string name="ga_share">Share contact</string>
+    <string name="ga_chat">Chat in the first messenger</string>
+    <string name="ga_voice">Voice call in the first messenger</string>
+    <string name="ga_video">Video call in the first messenger</string>
+    <string name="ga_chat_in">%1$s chat</string>
+    <string name="ga_voice_in">%1$s voice call</string>
+    <string name="ga_video_in">%1$s video call</string>
+    <string name="not_available">This contact has nothing for this action</string>
+    <string name="number_copied">Number copied</string>
+    <string name="change_icon">Change shortcut icon</string>
+    <string name="icon_text_hint">Letter or emoji</string>
+    <string name="icon_reset">Default</string>
+    <string name="icon_add">Add</string>
+    <string name="icon_save">Save</string>
+    <string name="no_pinned_shortcuts">No label shortcuts on the home screen yet</string>
+    <string name="icon_update_failed">The launcher did not accept the new icon</string>
+    <string name="buttons_title">Buttons in a row</string>
+    <string name="buttons_more_only">Only ⋮ (all actions in the menu)</string>
+    <string name="buttons_whatsapp" translatable="false">WhatsApp</string>
+    <string name="buttons_telegram" translatable="false">Telegram</string>
+    <string name="buttons_signal" translatable="false">Signal</string>
+    <string name="buttons_other_messengers">Other messengers</string>
+    <string name="inline_buttons_title">Buttons on the name line</string>
+    <string name="inline_buttons_never">Buttons always on the second line</string>
+    <plurals name="inline_buttons_up_to">
+        <item quantity="one">Up to %1$d button on the name line</item>
+        <item quantity="other">Up to %1$d buttons on the name line</item>
+    </plurals>
+    <string name="action_settings">Settings</string>
+    <string name="sort_title">Sort the list</string>
+    <string name="sort_first_name">By first name</string>
+    <string name="sort_last_name">By last name</string>
+    <string name="starred_first">Favorites first</string>
+    <string name="icon_no_background">No background</string>
+    <string name="icon_color">Color %1$d of %2$d</string>
 </resources>

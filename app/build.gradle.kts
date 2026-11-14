@@ -5,24 +5,31 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+// The release key comes from the environment (GitHub Secrets in CI); it is never in the repository.
+val keystoreFile = System.getenv("KEYSTORE_FILE")?.let(::file)
+val releaseSigning = keystoreFile != null && keystoreFile.exists()
+
 android {
     namespace = "io.github.yuriybak.contactlabelshortcut"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "io.github.yuriybak.contactlabelshortcut"
         minSdk = 26
-        targetSdk = 34
-        versionCode = (System.getenv("VERSION_CODE") ?: "1").toInt()
-        versionName = System.getenv("VERSION_NAME") ?: "0.0.0-local"
+        targetSdk = 36
+        // Raise both for every release; CI checks that the release tag is "v" + versionName
+        versionCode = 102
+        versionName = "0.1.0"
     }
 
     signingConfigs {
-        create("release") {
-            storeFile = rootProject.file("signing/release.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "contactlabel"
-            keyAlias = System.getenv("KEY_ALIAS") ?: "release"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "contactlabel"
+        if (releaseSigning) {
+            create("release") {
+                storeFile = keystoreFile
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
         }
     }
 
@@ -31,7 +38,8 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
-            signingConfig = signingConfigs.getByName("release")
+            // Without the release key (local builds, pull requests) the APK is signed with the debug key
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
 
@@ -39,10 +47,22 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
+    lint {
+        abortOnError = true
+        checkReleaseBuilds = false
+        // Also as text, so that CI prints the warnings in its log
+        textReport = true
+        textOutput = file("build/reports/lint-results.txt")
+    }
 }
 
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }
+}
+
+dependencies {
+    testImplementation("junit:junit:4.13.2")
 }

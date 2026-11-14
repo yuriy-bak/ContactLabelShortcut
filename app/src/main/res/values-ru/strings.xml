@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Ярлык метки</string>
     <string name="shortcut_entry_label">Метка контактов</string>
     <string name="pick_label">Выберите метку</string>
     <string name="create_shortcut">Создать ярлык</string>
@@ -9,5 +8,62 @@
     <string name="no_contacts">Нет контактов с этой меткой</string>
     <string name="label_not_found">Метка не найдена. Создайте ярлык заново.</string>
     <string name="pin_not_supported">Этот лаунчер не умеет добавлять ярлыки</string>
-    <string name="instructions">Добавьте на рабочий стол ярлык, который открывает контакты с выбранной меткой.\n\nНажмите кнопку ниже или добавьте ярлык из лаунчера: долгое нажатие на рабочем столе → Виджеты → Ярлык метки → Метка контактов.\n\nМетка откроется в приложении контактов по умолчанию. Если оно не умеет открывать метки, будет показан список контактов метки.</string>
+    <string name="label_list_entry">Список Contact Label Shortcut</string>
+    <string name="instructions">Добавьте на рабочий стол ярлык, который открывает контакты с выбранной меткой.
+
+Нажмите кнопку ниже или добавьте ярлык из лаунчера: долгое нажатие на рабочем столе → Виджеты → Contact Label Shortcut → Метка контактов.
+
+Ниже выберите, где открывать метку: в приложении контактов или в списке Contact Label Shortcut. Список открывается мгновенно, в нём есть кнопки звонка, SMS и чатов в мессенджерах. Долгое нажатие на кнопку звонка или SMS — выбор номера. Лупа вверху — поиск по имени или номеру. Долгое нажатие на значок мессенджера — его звонки. Какие кнопки показывать, свайпы и долгое нажатие на контакт — в настройках ниже.</string>
+    <string name="open_with_title">Открывать метку в</string>
+    <string name="open_with_system">Системный выбор (приложение по умолчанию или вопрос)</string>
+    <string name="action_call">Позвонить</string>
+    <string name="action_sms">Написать SMS</string>
+    <string name="action_more">Ещё</string>
+    <string name="no_app">Нет приложения, чтобы это открыть</string>
+    <string name="action_search">Поиск</string>
+    <string name="search_hint">Имя или номер</string>
+    <string name="nothing_found">Ничего не найдено</string>
+    <string name="gestures_title">Жесты в списке</string>
+    <string name="gesture_swipe_right">Свайп вправо</string>
+    <string name="gesture_swipe_left">Свайп влево</string>
+    <string name="gesture_long_press">Долгое нажатие</string>
+    <string name="ga_none">Ничего</string>
+    <string name="ga_menu">Меню всех действий</string>
+    <string name="ga_open">Открыть контакт</string>
+    <string name="ga_edit">Изменить контакт</string>
+    <string name="ga_copy">Скопировать номер</string>
+    <string name="ga_share">Поделиться контактом</string>
+    <string name="ga_chat">Чат в первом мессенджере</string>
+    <string name="ga_voice">Аудиозвонок в первом мессенджере</string>
+    <string name="ga_video">Видеозвонок в первом мессенджере</string>
+    <string name="ga_chat_in">Чат %1$s</string>
+    <string name="ga_voice_in">Аудиозвонок %1$s</string>
+    <string name="ga_video_in">Видеозвонок %1$s</string>
+    <string name="not_available">У этого контакта такого нет</string>
+    <string name="number_copied">Номер скопирован</string>
+    <string name="change_icon">Изменить значок ярлыка</string>
+    <string name="icon_text_hint">Буква или эмодзи</string>
+    <string name="icon_reset">По умолчанию</string>
+    <string name="icon_add">Добавить</string>
+    <string name="icon_save">Сохранить</string>
+    <string name="no_pinned_shortcuts">На рабочем столе пока нет ярлыков меток</string>
+    <string name="icon_update_failed">Лаунчер не принял новый значок</string>
+    <string name="buttons_title">Кнопки в строке</string>
+    <string name="buttons_more_only">Только ⋮ (все действия в меню)</string>
+    <string name="buttons_other_messengers">Другие мессенджеры</string>
+    <string name="inline_buttons_title">Кнопки в строке с именем</string>
+    <string name="inline_buttons_never">Кнопки всегда на второй строке</string>
+    <plurals name="inline_buttons_up_to">
+        <item quantity="one">В строке с именем, если кнопок не больше %1$d</item>
+        <item quantity="few">В строке с именем, если кнопок не больше %1$d</item>
+        <item quantity="many">В строке с именем, если кнопок не больше %1$d</item>
+        <item quantity="other">В строке с именем, если кнопок не больше %1$d</item>
+    </plurals>
+    <string name="action_settings">Настройки</string>
+    <string name="sort_title">Сортировка списка</string>
+    <string name="sort_first_name">По имени</string>
+    <string name="sort_last_name">По фамилии</string>
+    <string name="starred_first">Избранные сверху</string>
+    <string name="icon_no_background">Без фона</string>
+    <string name="icon_color">Цвет %1$d из %2$d</string>
 </resources>

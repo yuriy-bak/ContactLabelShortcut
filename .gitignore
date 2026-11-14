@@ -3,5 +3,7 @@ build/
 local.properties
 .idea/
 *.iml
-signing/release.jks
+signing/
+*.jks
+*.keystore
 *.apk

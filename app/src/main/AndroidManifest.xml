@@ -1,7 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+
+    <!-- Android 11+ package visibility: apps that open labels, contacts and contact data rows -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="vnd.android.cursor.item/*" />
+        </intent>
+        <package android:name="com.whatsapp" />
+        <package android:name="com.whatsapp.w4b" />
+        <package android:name="org.telegram.messenger" />
+        <package android:name="org.telegram.messenger.web" />
+        <package android:name="org.telegram.messenger.beta" />
+        <package android:name="org.thoughtcrime.securesms" />
+        <package android:name="com.viber.voip" />
+        <package android:name="ch.threema.app" />
+        <package android:name="ch.threema.app.libre" />
+        <package android:name="ch.threema.app.work" />
+    </queries>
 
     <application
         android:allowBackup="true"
@@ -34,7 +53,9 @@
             </intent-filter>
         </activity>
 
-        <!-- Trampoline started by the home screen shortcut -->
+        <!-- Trampoline started by the home screen shortcut. Exported: launchers that take
+             the legacy ACTION_CREATE_SHORTCUT result start its intent themselves. It only
+             opens a label, it returns nothing to the caller. -->
         <activity
             android:name=".OpenLabelActivity"
             android:excludeFromRecents="true"
@@ -43,8 +64,19 @@
             android:taskAffinity=""
             android:theme="@android:style/Theme.NoDisplay" />
 
+        <!-- Our own label list; also offered to other apps as a way to open a label.
+             Its own task: the launcher icon opens the app, not a list left in the background. -->
         <activity
             android:name=".LabelContactsActivity"
-            android:exported="false" />
+            android:exported="true"
+            android:taskAffinity="${applicationId}.list"
+            android:label="@string/label_list_entry">
+            <!-- A content type, not a web link: lint's App Link check does not apply -->
+            <intent-filter tools:ignore="AppLinkUrlError">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="vnd.android.cursor.item/group" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

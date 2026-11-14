@@ -8,7 +8,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
-import android.graphics.drawable.Icon
 import android.os.Bundle
 import android.widget.Toast
 
@@ -63,13 +62,22 @@ class PickLabelActivity : Activity() {
 
         AlertDialog.Builder(this)
             .setTitle(R.string.pick_label)
-            .setItems(items) { _, which -> createShortcut(labels[which]) }
+            .setItems(items) { _, which -> chooseIcon(labels[which]) }
             .setOnCancelListener { cancel() }
             .show()
     }
 
-    private fun createShortcut(label: Label) {
-        val info = buildShortcut(this, label)
+    private fun chooseIcon(label: Label) {
+        val id = shortcutId(label)
+        val initial = ShortcutIcon.saved(this, id) ?: ShortcutIcon.default(label.title)
+        IconEditor.show(this, label.title, initial, R.string.icon_add, onCancel = ::cancel) { icon ->
+            ShortcutIcon.save(this, id, icon)
+            createShortcut(label, icon)
+        }
+    }
+
+    private fun createShortcut(label: Label, icon: ShortcutIcon) {
+        val info = buildShortcut(this, label, icon)
         val shortcuts = getSystemService(ShortcutManager::class.java)
 
         if (fromLauncher) {
@@ -92,15 +100,18 @@ class PickLabelActivity : Activity() {
     companion object {
         private const val REQUEST_CONTACTS = 1
 
-        fun buildShortcut(context: Context, label: Label): ShortcutInfo {
+        /** Stable while the label exists: it is how a pinned shortcut is found again. */
+        fun shortcutId(label: Label): String =
+            "label_${label.accountName}_${label.sourceId ?: label.id.toString()}"
+
+        fun buildShortcut(context: Context, label: Label, icon: ShortcutIcon): ShortcutInfo {
             val launch = label.putInto(
                 Intent(context, OpenLabelActivity::class.java).setAction(Intent.ACTION_VIEW)
             )
-            val key = label.sourceId ?: label.id.toString()
-            return ShortcutInfo.Builder(context, "label_${label.accountName}_$key")
+            return ShortcutInfo.Builder(context, shortcutId(label))
                 .setShortLabel(label.title)
                 .setLongLabel(label.title)
-                .setIcon(Icon.createWithResource(context, R.mipmap.ic_launcher))
+                .setIcon(icon.toIcon(context))
                 .setIntent(launch)
                 .build()
         }
