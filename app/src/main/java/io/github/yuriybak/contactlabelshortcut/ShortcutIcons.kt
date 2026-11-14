@@ -64,11 +64,11 @@ data class ShortcutIcon(val text: String, val color: Int) {
 
         /** Cuts [text] to [MAX_LENGTH] characters without splitting an emoji. */
         fun clip(text: String): String {
-            val it = BreakIterator.getCharacterInstance()
-            it.setText(text)
+            val chars = BreakIterator.getCharacterInstance()
+            chars.setText(text)
             var end = 0
             repeat(MAX_LENGTH) {
-                val next = it.next()
+                val next = chars.next()
                 if (next == BreakIterator.DONE) return text
                 end = next
             }
