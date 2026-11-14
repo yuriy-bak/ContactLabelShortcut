@@ -85,7 +85,7 @@ class LabelContactsActivity : Activity() {
 
         adapter = Adapter(items)
         val list = ListView(this).apply {
-            this.adapter = adapter
+            this.adapter = this@LabelContactsActivity.adapter
             divider = null
         }
         val empty = TextView(this).apply {
