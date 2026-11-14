@@ -1,0 +1,17 @@
+<p>Label Shortcut puts a home screen shortcut for a contact label. One tap opens all contacts with that label, for example "Family" or "Work".</p>
+
+<p><b>Features</b></p>
+<ul>
+<li>Works with Google Contacts labels and contact groups of other accounts.</li>
+<li>Opens the label in your contacts app. If that app cannot open labels, the app shows the label's contacts itself.</li>
+<li>The shortcut keeps working after the account is resynced.</li>
+<li>Add a shortcut from the app or from the launcher's widgets list.</li>
+</ul>
+
+<p><b>Privacy</b></p>
+<ul>
+<li>The only permission is reading contacts.</li>
+<li>No internet access, no ads, no trackers.</li>
+</ul>
+
+<p>Requires Android 8.0 or later.</p>
