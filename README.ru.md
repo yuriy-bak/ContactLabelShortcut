@@ -25,16 +25,17 @@
 
 ## Сборка
 
-APK собирает GitHub Actions: каждый push в `main` загружает артефакт, а тег `v*` публикует релиз с APK.
+APK собирает GitHub Actions (lint, юнит-тесты, release-сборка): каждый push в `main` загружает артефакт, а тег `v*` публикует релиз с APK. Тег должен быть `v` + `versionName` из `app/build.gradle.kts`; перед каждым релизом там поднимаются `versionCode` и `versionName`.
 
-Локальная сборка (JDK 17, Android SDK, Gradle 8.11):
+Локальная сборка (JDK 17, Android SDK):
 
 ```bash
-base64 -d signing/release.jks.b64 > signing/release.jks
-gradle :app:assembleRelease
+./gradlew :app:assembleRelease
 ```
 
-Ключ подписи лежит в репозитории намеренно: у всех сборок, локальных и CI, одна подпись, и обновления ставятся поверх. Это не секрет: APK с такой подписью может собрать кто угодно, поэтому устанавливайте его только из релизов этого репозитория.
+Без релизного ключа APK подписывается локальным debug-ключом. Релизы подписываются в CI ключом из GitHub Secrets (`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`); в репозитории его нет.
+
+До 0.1.0-beta.20 релизы подписывались открытым тестовым ключом. Начиная с 0.1.0-beta.21 подпись новая: перед установкой один раз удалите старую бету.
 
 ## Поддержка
 

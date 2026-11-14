@@ -25,16 +25,17 @@ Download the APK from [Releases](https://github.com/yuriy-bak/ContactLabelShortc
 
 ## Building
 
-APKs are built by GitHub Actions: every push to `main` uploads an artifact, and a `v*` tag publishes a release with the APK.
+APKs are built by GitHub Actions (lint, unit tests, release build): every push to `main` uploads an artifact, and a `v*` tag publishes a release with the APK. The tag must be `v` + `versionName` from `app/build.gradle.kts`; raise `versionCode` and `versionName` there for every release.
 
-Local build (JDK 17, Android SDK, Gradle 8.11):
+Local build (JDK 17, Android SDK):
 
 ```bash
-base64 -d signing/release.jks.b64 > signing/release.jks
-gradle :app:assembleRelease
+./gradlew :app:assembleRelease
 ```
 
-The signing key is in the repository on purpose, so that every build, local or CI, has the same signature and updates install over each other. It is not a secret: anyone can build an APK with this signature, so install it only from this repository's releases.
+Without the release key the APK is signed with the local debug key. Release builds are signed in CI with a key kept in GitHub Secrets (`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`); it is not in the repository.
+
+Up to 0.1.0-beta.20 releases were signed with a public test key. 0.1.0-beta.21 and later have a new signature: uninstall an older beta once before installing them.
 
 ## Support
 
