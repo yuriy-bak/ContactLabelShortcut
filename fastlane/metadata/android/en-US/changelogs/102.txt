@@ -1,0 +1,4 @@
+First stable release.
+- Home screen shortcut to a contact label (group)
+- Built-in label list with quick call, SMS and messenger actions
+- New hand-drawn app icon with themed icon support

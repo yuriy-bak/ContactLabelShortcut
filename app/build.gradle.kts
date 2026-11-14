@@ -18,8 +18,8 @@ android {
         minSdk = 26
         targetSdk = 36
         // Raise both for every release; CI checks that the release tag is "v" + versionName
-        versionCode = 101
-        versionName = "0.1.0-beta.22"
+        versionCode = 102
+        versionName = "0.1.0"
     }
 
     signingConfigs {
