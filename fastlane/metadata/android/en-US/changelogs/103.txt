@@ -1,0 +1,1 @@
+F-Droid compatibility: the APK no longer contains the dependency metadata block.

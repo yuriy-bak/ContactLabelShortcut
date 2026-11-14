@@ -18,8 +18,8 @@ android {
         minSdk = 26
         targetSdk = 36
         // Raise both for every release; CI checks that the release tag is "v" + versionName
-        versionCode = 102
-        versionName = "0.1.0"
+        versionCode = 103
+        versionName = "0.1.1"
     }
 
     signingConfigs {
@@ -41,6 +41,11 @@ android {
             // Without the release key (local builds, pull requests) the APK is signed with the debug key
             signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
+    }
+
+    // No encrypted dependency metadata block in the APK signature: F-Droid rejects it
+    dependenciesInfo {
+        includeInApk = false
     }
 
     compileOptions {
