@@ -79,8 +79,9 @@ jobs:
           name: apk
           path: ContactLabelShortcut-*.apk
 
+      # Lint and test reports, also when the build passes (lint warnings do not fail it)
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: failure()
+        if: always()
         with:
           name: reports
           path: app/build/reports/
