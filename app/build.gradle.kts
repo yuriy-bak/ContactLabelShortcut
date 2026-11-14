@@ -18,8 +18,8 @@ android {
         minSdk = 26
         targetSdk = 35
         // Raise both for every release; CI checks that the release tag is "v" + versionName
-        versionCode = 100
-        versionName = "0.1.0-beta.21"
+        versionCode = 101
+        versionName = "0.1.0-beta.22"
     }
 
     signingConfigs {
@@ -51,6 +51,9 @@ android {
     lint {
         abortOnError = true
         checkReleaseBuilds = false
+        // Also as text, so that CI prints the warnings in its log
+        textReport = true
+        textOutput = file("build/reports/lint-results.txt")
     }
 }
 

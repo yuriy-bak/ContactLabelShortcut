@@ -234,6 +234,8 @@ class MainActivity : Activity() {
             Toast.makeText(this, R.string.no_pinned_shortcuts, Toast.LENGTH_LONG).show()
             return
         }
+        // Some launchers do not report their shortcuts: only clean up when this one does
+        ShortcutIcon.retainOnly(this, pinned.mapTo(HashSet()) { it.id })
         AlertDialog.Builder(this)
             .setTitle(R.string.change_icon)
             .setItems(pinned.map { it.shortLabel ?: it.id }.toTypedArray()) { _, which ->

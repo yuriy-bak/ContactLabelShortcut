@@ -83,6 +83,7 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
     private val actionSlots = ArrayList<ButtonSlot>()
     private var actionCount = 0
     private var trailingSlot: ButtonSlot? = null
+    /** A button's touch target, also the height of the button line. */
     private val actionSize = context.dp(style.actionSize)
     private val ownIconSize = context.dp(style.actionIconSize)
     private val appIconSize = context.dp(style.appIconSize)
@@ -91,7 +92,6 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
 
     private val avatarSize = context.dp(style.avatarSize)
     private val avatarGap = context.dp(style.avatarGap)
-    private val actionLine = context.dp(style.actionSize)
     private val restGap = context.dp(8)
     /** Narrower than this, the rest of the name gets lines of its own above the buttons. */
     private val minRestWidth = context.dp(64)
@@ -107,6 +107,7 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
             }
         }
     private val minRowHeight = context.dp(style.rowMinHeight)
+    private val oneLineMinHeight = context.dp(ONE_LINE_MIN_HEIGHT)
 
     /** Asked when a swipe starts (to the right if true); null means this row does not swipe that way. */
     var swipe: ((toRight: Boolean) -> SwipeTarget?)? = null
@@ -236,12 +237,12 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
             if (name.text.toString() != nameText.toString()) name.text = nameText
             nameRest.text = ""
             splitWidth = -1
-            val buttonsWidth = actions.measuredWidth + max(trailing.measuredWidth, if (style.moreOnly) actionLine else 0)
+            val buttonsWidth = actions.measuredWidth + max(trailing.measuredWidth, if (style.moreOnly) actionSize else 0)
             val nameWidth = max(textAvailable - buttonsWidth - restGap, 0)
             name.measure(MeasureSpec.makeMeasureSpec(nameWidth, MeasureSpec.AT_MOST), unspecified)
             nameRest.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY))
-            val content = maxOf(avatarHeight, name.measuredHeight, actionLine)
-            setMeasuredDimension(width, max(content + paddingTop + paddingBottom, context.dp(ONE_LINE_MIN_HEIGHT)))
+            val content = maxOf(avatarHeight, name.measuredHeight, actionSize)
+            setMeasuredDimension(width, max(content + paddingTop + paddingBottom, oneLineMinHeight))
             return
         }
 
@@ -253,7 +254,7 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
         nameRest.measure(MeasureSpec.makeMeasureSpec(restWidth, MeasureSpec.AT_MOST), unspecified)
 
         val rest = if (nameRest.text.isEmpty()) 0 else nameRest.measuredHeight
-        val second = if (restBeside) max(actionLine, rest) else rest + actionLine
+        val second = if (restBeside) max(actionSize, rest) else rest + actionSize
         val content = max(avatarHeight, name.measuredHeight + second)
         setMeasuredDimension(width, max(content + paddingTop + paddingBottom, minRowHeight))
     }
@@ -408,20 +409,20 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
 
         val hasRest = nameRest.text.isNotEmpty()
         val rest = if (hasRest) nameRest.measuredHeight else 0
-        val second = if (restBeside) max(actionLine, rest) else rest + actionLine
+        val second = if (restBeside) max(actionSize, rest) else rest + actionSize
         val top = centerY - (name.measuredHeight + second) / 2
         place(name, textStart, top)
         var lineTop = top + name.measuredHeight
         if (hasRest) {
             // Beside the buttons, one line of the rest is centered on them
-            place(nameRest, textStart, if (restBeside) lineTop + max(0, (actionLine - rest) / 2) else lineTop)
+            place(nameRest, textStart, if (restBeside) lineTop + max(0, (actionSize - rest) / 2) else lineTop)
         } else {
             place(nameRest, textStart, lineTop)
         }
         if (!restBeside) lineTop += rest
         val trailingStart = width - endPad - trailing.measuredWidth
-        place(trailing, trailingStart, lineTop + (actionLine - trailing.measuredHeight) / 2)
-        place(actions, trailingStart - actions.measuredWidth, lineTop + (actionLine - actions.measuredHeight) / 2)
+        place(trailing, trailingStart, lineTop + (actionSize - trailing.measuredHeight) / 2)
+        place(actions, trailingStart - actions.measuredWidth, lineTop + (actionSize - actions.measuredHeight) / 2)
     }
 
     private companion object {

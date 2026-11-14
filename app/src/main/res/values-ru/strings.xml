@@ -60,4 +60,5 @@
     <string name="sort_last_name">По фамилии</string>
     <string name="starred_first">Избранные сверху</string>
     <string name="icon_no_background">Без фона</string>
+    <string name="icon_color">Цвет %1$d из %2$d</string>
 </resources>

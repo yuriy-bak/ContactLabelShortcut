@@ -11,6 +11,9 @@ import android.provider.ContactsContract.Data
 
 /** A phone number of a contact. */
 class PhoneNumber(val number: String, val label: CharSequence, val superPrimary: Boolean) {
+    /** Only the digits, for the search: computed once (in the background load), not on every typed letter. */
+    val digits: String = number.filter { it.isDigit() }
+
     /** "Mobile: +1 555 …", for menus. */
     override fun toString() = "$label: $number"
 }

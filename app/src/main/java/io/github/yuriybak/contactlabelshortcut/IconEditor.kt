@@ -3,6 +3,7 @@ package io.github.yuriybak.contactlabelshortcut
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.DialogInterface
+import android.graphics.Bitmap
 import android.graphics.drawable.GradientDrawable
 import android.text.Editable
 import android.text.InputType
@@ -44,7 +45,7 @@ object IconEditor {
             val bitmap = current().bitmap(activity)
             val crop = bitmap.width * 18 / 108
             preview.setImageBitmap(
-                android.graphics.Bitmap.createBitmap(bitmap, crop, crop, bitmap.width - 2 * crop, bitmap.height - 2 * crop)
+                Bitmap.createBitmap(bitmap, crop, crop, bitmap.width - 2 * crop, bitmap.height - 2 * crop)
             )
         }
 
@@ -85,7 +86,11 @@ object IconEditor {
                         c == ShortcutIcon.TRANSPARENT -> setStroke(dp(2), outline, dp(4).toFloat(), dp(3).toFloat())
                     }
                 }
-                if (c == ShortcutIcon.TRANSPARENT) swatches[i].contentDescription = activity.getString(R.string.icon_no_background)
+                // For TalkBack: "Color 3 of 12", selected or not
+                val name = if (c == ShortcutIcon.TRANSPARENT) activity.getString(R.string.icon_no_background)
+                    else activity.getString(R.string.icon_color, i + 1, ShortcutIcon.COLORS.size)
+                swatches[i].contentDescription = name
+                swatches[i].isSelected = c == color
             }
         }
         val grid = GridLayout(activity).apply { columnCount = 6 }

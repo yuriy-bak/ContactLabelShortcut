@@ -19,7 +19,7 @@ class SearchText(query: String) {
     fun matches(searchName: String, phones: List<PhoneNumber>): Boolean {
         if (searchName.contains(text)) return true
         val digits = digits ?: return false
-        return phones.any { phone -> phone.number.filter { it.isDigit() }.contains(digits) }
+        return phones.any { it.digits.contains(digits) }
     }
 
     companion object {

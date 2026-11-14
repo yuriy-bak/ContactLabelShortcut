@@ -64,4 +64,5 @@ Choose below where labels open: a contacts app or \"Contact Label Shortcut list\
     <string name="sort_last_name">By last name</string>
     <string name="starred_first">Favorites first</string>
     <string name="icon_no_background">No background</string>
+    <string name="icon_color">Color %1$d of %2$d</string>
 </resources>

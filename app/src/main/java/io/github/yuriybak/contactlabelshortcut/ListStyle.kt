@@ -28,13 +28,13 @@ data class ListStyle(
     /** A row with at most this many buttons (with "more") is one line; 0: buttons always on the second line. */
     val inlineButtons: Int = 0,
 ) {
-    private val shown get() = listOf(showCall, showSms, showWhatsApp, showTelegram, showSignal, showOtherChats)
+    // Computed once: both are asked while every row is measured and bound
 
     /** Some buttons are hidden: the "more" button then opens the menu of all actions. */
-    val hidesActions: Boolean get() = !shown.all { it }
+    val hidesActions: Boolean = !(showCall && showSms && showWhatsApp && showTelegram && showSignal && showOtherChats)
 
     /** No buttons but "more": it goes on the name line, rows are one line high. */
-    val moreOnly: Boolean get() = shown.none { it }
+    val moreOnly: Boolean = !(showCall || showSms || showWhatsApp || showTelegram || showSignal || showOtherChats)
 
     /** Whether the button of the messenger with this chat MIME type is shown. */
     fun showsChat(mimeType: String): Boolean = when {

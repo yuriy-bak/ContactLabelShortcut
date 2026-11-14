@@ -106,6 +106,14 @@ data class ShortcutIcon(val text: String, val color: Int) {
             prefs(context).edit().putString(shortcutId, "$color|${icon.text}").apply()
         }
 
+        /** Forgets the icons of shortcuts that are no longer pinned (the user removed them). */
+        fun retainOnly(context: Context, shortcutIds: Set<String>) {
+            val prefs = prefs(context)
+            val stale = prefs.all.keys - shortcutIds
+            if (stale.isEmpty()) return
+            prefs.edit().apply { stale.forEach(::remove) }.apply()
+        }
+
         private fun prefs(context: Context) = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
     }
 }

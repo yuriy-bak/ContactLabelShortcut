@@ -64,10 +64,12 @@
             android:taskAffinity=""
             android:theme="@android:style/Theme.NoDisplay" />
 
-        <!-- Our own label list; also offered to other apps as a way to open a label -->
+        <!-- Our own label list; also offered to other apps as a way to open a label.
+             Its own task: the launcher icon opens the app, not a list left in the background. -->
         <activity
             android:name=".LabelContactsActivity"
             android:exported="true"
+            android:taskAffinity="${applicationId}.list"
             android:label="@string/label_list_entry">
             <!-- A content type, not a web link: lint's App Link check does not apply -->
             <intent-filter tools:ignore="AppLinkUrlError">

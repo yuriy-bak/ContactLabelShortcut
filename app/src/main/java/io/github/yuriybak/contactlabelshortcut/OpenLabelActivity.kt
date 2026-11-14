@@ -3,8 +3,11 @@ package io.github.yuriybak.contactlabelshortcut
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
+import android.content.ContentUris
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.provider.ContactsContract.Groups
 import android.widget.Toast
 
 /**
@@ -31,13 +34,16 @@ class OpenLabelActivity : Activity() {
             return
         }
 
+        // A fresh list every time: a list left in the background (maybe of another label) is replaced
         val builtin = label.putInto(Intent(this, LabelContactsActivity::class.java))
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            .setData(ContentUris.withAppendedId(Groups.CONTENT_URI, label.id))
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
         val view = Settings.groupIntent(label.id).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
         when (val openWith = Settings.openWith(this)) {
             Settings.OPEN_WITH_BUILTIN -> startActivity(builtin)
-            Settings.OPEN_WITH_SYSTEM -> start(view, builtin)
+            // Our list may be the system's default for labels: then start it as our own
+            Settings.OPEN_WITH_SYSTEM -> if (isOurs(view)) startActivity(builtin) else start(view, builtin)
             else -> {
                 val component = ComponentName.unflattenFromString(openWith)
                 // The chosen app may have been uninstalled: fall back to the system choice
@@ -48,6 +54,9 @@ class OpenLabelActivity : Activity() {
         }
         finish()
     }
+
+    private fun isOurs(intent: Intent): Boolean =
+        packageManager.resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY)?.activityInfo?.packageName == packageName
 
     /** Starts [intent]; on failure starts [fallback] if given. Returns whether [intent] started. */
     private fun start(intent: Intent, fallback: Intent?): Boolean {

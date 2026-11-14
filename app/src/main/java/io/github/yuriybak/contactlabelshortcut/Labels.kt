@@ -95,7 +95,8 @@ object Labels {
         accountName: String?,
         accountType: String?,
     ): Label? {
-        val selection = StringBuilder("$column=? AND ${Groups.DELETED}=0")
+        // Like all(): system groups (My Contacts, Starred, …) are never a shortcut's label
+        val selection = StringBuilder("$column=? AND ${Groups.DELETED}=0 AND ${Groups.SYSTEM_ID} IS NULL")
         val args = mutableListOf(value)
         if (accountName != null) {
             selection.append(" AND ${Groups.ACCOUNT_NAME}=?")

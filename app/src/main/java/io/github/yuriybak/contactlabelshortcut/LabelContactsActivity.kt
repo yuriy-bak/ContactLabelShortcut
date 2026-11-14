@@ -1,8 +1,10 @@
 package io.github.yuriybak.contactlabelshortcut
 
 import android.app.Activity
+import android.app.ActivityManager
 import android.content.Intent
 import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.Menu
@@ -53,6 +55,8 @@ class LabelContactsActivity : Activity() {
         title = intent.getStringExtra(Label.EXTRA_TITLE)
             ?: (if (permitted && groupId >= 0) LabelContactsRepository.loadTitle(this, groupId) else null)
             ?: getString(R.string.app_name)
+        // The list has a task of its own: name it after the label in the recent apps
+        setTaskDescription(taskDescription(title.toString()))
         // Settings in the place of the "up" button, left of the title
         actionBar?.apply {
             setDisplayHomeAsUpEnabled(true)
@@ -70,7 +74,7 @@ class LabelContactsActivity : Activity() {
 
         if (contacts.isEmpty()) {
             setContentView(TextView(this).apply {
-                setText(R.string.no_contacts)
+                setText(if (permitted) R.string.no_contacts else R.string.no_permission)
                 val pad = dp(24)
                 setPadding(pad, pad, pad, pad)
                 fitsSystemWindows = true
@@ -259,6 +263,14 @@ class LabelContactsActivity : Activity() {
             onClick = { menu.showOther(contact) }, onLongClick = null)
         else -> null
     }
+
+    private fun taskDescription(label: String): ActivityManager.TaskDescription =
+        if (Build.VERSION.SDK_INT >= 33) {
+            ActivityManager.TaskDescription.Builder().setLabel(label).build()
+        } else {
+            @Suppress("DEPRECATION")
+            ActivityManager.TaskDescription(label)
+        }
 
     private companion object {
         const val REQUEST_SETTINGS = 1
