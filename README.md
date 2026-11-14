@@ -20,8 +20,8 @@ Download the APK from [Releases](https://github.com/yuriy-bak/ContactLabelShortc
 
 ## Usage
 
-- **From the launcher:** long-press the home screen → Widgets → Label Shortcut → drag **Contact label** to the screen → choose a label.
-- **From the app:** open Label Shortcut → **Create shortcut** → choose a label → confirm adding it.
+- **From the launcher:** long-press the home screen → Widgets → Contact Label Shortcut → drag **Contact label** to the screen → choose a label.
+- **From the app:** open Contact Label Shortcut → **Create shortcut** → choose a label → confirm adding it.
 
 ## Building
 

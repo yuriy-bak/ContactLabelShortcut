@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Label Shortcut</string>
+    <string name="app_name">Contact Label Shortcut</string>
     <string name="shortcut_entry_label">Contact label</string>
     <string name="pick_label">Choose a label</string>
     <string name="create_shortcut">Create shortcut</string>
@@ -9,12 +9,12 @@
     <string name="no_contacts">No contacts with this label</string>
     <string name="label_not_found">The label was not found. Create the shortcut again.</string>
     <string name="pin_not_supported">This launcher cannot add shortcuts</string>
-    <string name="label_list_entry">Label Shortcut list</string>
+    <string name="label_list_entry">Contact Label Shortcut list</string>
     <string name="instructions">Add a home screen shortcut that opens contacts with a chosen label.
 
-Tap the button below, or add a shortcut from the launcher: long-press the home screen → Widgets → Label Shortcut → Contact label.
+Tap the button below, or add a shortcut from the launcher: long-press the home screen → Widgets → Contact Label Shortcut → Contact label.
 
-Choose below where labels open: a contacts app or \"Label Shortcut list\". The list opens instantly and has buttons to call, send an SMS or open a chat in a messenger. Long-press the call or SMS button to choose a number.</string>
+Choose below where labels open: a contacts app or \"Contact Label Shortcut list\". The list opens instantly and has buttons to call, send an SMS or open a chat in a messenger. Long-press the call or SMS button to choose a number.</string>
     <string name="open_with_title">Open labels in</string>
     <string name="open_with_system">System choice (default app or ask)</string>
     <string name="action_call">Call</string>
