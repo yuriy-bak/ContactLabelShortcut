@@ -11,12 +11,12 @@ val releaseSigning = keystoreFile != null && keystoreFile.exists()
 
 android {
     namespace = "io.github.yuriybak.contactlabelshortcut"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "io.github.yuriybak.contactlabelshortcut"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         // Raise both for every release; CI checks that the release tag is "v" + versionName
         versionCode = 101
         versionName = "0.1.0-beta.22"

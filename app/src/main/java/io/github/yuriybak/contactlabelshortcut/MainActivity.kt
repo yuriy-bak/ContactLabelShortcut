@@ -175,7 +175,7 @@ class MainActivity : Activity() {
     }
 
     private fun inlineButtonsText(count: Int): String =
-        if (count == 0) getString(R.string.inline_buttons_never) else getString(R.string.inline_buttons_up_to, count)
+        if (count == 0) getString(R.string.inline_buttons_never) else resources.getQuantityString(R.plurals.inline_buttons_up_to, count, count)
 
     private fun chooseInlineButtons() {
         val values = (0..MAX_INLINE_BUTTONS).toList()

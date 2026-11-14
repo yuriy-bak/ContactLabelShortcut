@@ -1,5 +1,6 @@
 package io.github.yuriybak.contactlabelshortcut
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ActivityManager
 import android.content.Intent
@@ -153,6 +154,8 @@ class LabelContactsActivity : Activity() {
         if (requestCode == REQUEST_SETTINGS && resultCode == RESULT_OK) recreate()
     }
 
+    // The only item of the action bar: there is always room for it
+    @SuppressLint("AlwaysShowAction")
     private fun addSearch(menu: Menu, searchIcon: Drawable?) {
         val item = menu.add(Menu.NONE, R.id.action_search, Menu.NONE, R.string.action_search)
         item.icon = searchIcon

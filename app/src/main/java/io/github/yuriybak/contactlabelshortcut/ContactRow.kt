@@ -1,6 +1,7 @@
 package io.github.yuriybak.contactlabelshortcut
 
 import android.animation.ValueAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -49,6 +50,10 @@ class RowAction(
  * The button views are kept when the row is reused for another contact ([setActions]), so
  * scrolling creates no views.
  */
+// Created only in code, never inflated: no XML constructors. Taps go through super.onTouchEvent,
+// which calls performClick; swipes have no accessibility path of their own, but everything they do
+// is also in the buttons and in the menu of all actions.
+@SuppressLint("ViewConstructor", "ClickableViewAccessibility")
 class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(context) {
 
     val avatar = ImageView(context).apply {

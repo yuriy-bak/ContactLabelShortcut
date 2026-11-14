@@ -57,7 +57,10 @@ Choose below where labels open: a contacts app or \"Contact Label Shortcut list\
     <string name="buttons_other_messengers">Other messengers</string>
     <string name="inline_buttons_title">Buttons on the name line</string>
     <string name="inline_buttons_never">Buttons always on the second line</string>
-    <string name="inline_buttons_up_to">Up to %1$d buttons on the name line</string>
+    <plurals name="inline_buttons_up_to">
+        <item quantity="one">Up to %1$d button on the name line</item>
+        <item quantity="other">Up to %1$d buttons on the name line</item>
+    </plurals>
     <string name="action_settings">Settings</string>
     <string name="sort_title">Sort the list</string>
     <string name="sort_first_name">By first name</string>
