@@ -43,4 +43,11 @@
     <string name="menu_sms">SMS: %1$s</string>
     <string name="not_available">У этого контакта такого нет</string>
     <string name="number_copied">Номер скопирован</string>
+    <string name="change_icon">Изменить значок ярлыка</string>
+    <string name="icon_text_hint">Буква или эмодзи</string>
+    <string name="icon_reset">По умолчанию</string>
+    <string name="icon_add">Добавить</string>
+    <string name="icon_save">Сохранить</string>
+    <string name="no_pinned_shortcuts">На рабочем столе пока нет ярлыков меток</string>
+    <string name="icon_update_failed">Лаунчер не принял новый значок</string>
 </resources>

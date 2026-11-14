@@ -44,4 +44,11 @@ Choose below where labels open: a contacts app or \"Contact Label Shortcut list\
     <string name="menu_sms">SMS %1$s</string>
     <string name="not_available">This contact has nothing for this action</string>
     <string name="number_copied">Number copied</string>
+    <string name="change_icon">Change shortcut icon</string>
+    <string name="icon_text_hint">Letter or emoji</string>
+    <string name="icon_reset">Default</string>
+    <string name="icon_add">Add</string>
+    <string name="icon_save">Save</string>
+    <string name="no_pinned_shortcuts">No label shortcuts on the home screen yet</string>
+    <string name="icon_update_failed">The launcher did not accept the new icon</string>
 </resources>

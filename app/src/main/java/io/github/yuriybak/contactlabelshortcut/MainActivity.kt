@@ -3,11 +3,14 @@ package io.github.yuriybak.contactlabelshortcut
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.pm.ShortcutInfo
+import android.content.pm.ShortcutManager
 import android.os.Bundle
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
 
 /** Short instructions, a button that pins a label shortcut and the settings. */
 class MainActivity : Activity() {
@@ -36,6 +39,11 @@ class MainActivity : Activity() {
                 startActivity(Intent(this@MainActivity, PickLabelActivity::class.java))
             }
         }, wrap().apply { topMargin = pad })
+
+        layout.addView(Button(this).apply {
+            setText(R.string.change_icon)
+            setOnClickListener { chooseShortcutToRestyle() }
+        }, wrap())
 
         layout.addView(TextView(this).apply {
             setText(R.string.open_with_title)
@@ -109,6 +117,33 @@ class MainActivity : Activity() {
                 Settings.setOpenWith(this, values[which])
                 openWithButton.text = names[which]
                 dialog.dismiss()
+            }
+            .show()
+    }
+
+    /** Pinned label shortcuts get a new icon in place: same id, so the launcher keeps them. */
+    private fun chooseShortcutToRestyle() {
+        val manager = getSystemService(ShortcutManager::class.java)
+        val pinned = manager.pinnedShortcuts
+            .filter { it.id.startsWith("label_") }
+            .sortedBy { it.shortLabel?.toString()?.lowercase() }
+        if (pinned.isEmpty()) {
+            Toast.makeText(this, R.string.no_pinned_shortcuts, Toast.LENGTH_LONG).show()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle(R.string.change_icon)
+            .setItems(pinned.map { it.shortLabel ?: it.id }.toTypedArray()) { _, which ->
+                val shortcut = pinned[which]
+                val title = shortcut.shortLabel?.toString() ?: ""
+                val initial = ShortcutIcon.saved(this, shortcut.id) ?: ShortcutIcon.default(title)
+                IconEditor.show(this, title, initial, R.string.icon_save, onCancel = {}) { icon ->
+                    ShortcutIcon.save(this, shortcut.id, icon)
+                    val update = ShortcutInfo.Builder(this, shortcut.id).setIcon(icon.toIcon(this)).build()
+                    if (!manager.updateShortcuts(listOf(update))) {
+                        Toast.makeText(this, R.string.icon_update_failed, Toast.LENGTH_LONG).show()
+                    }
+                }
             }
             .show()
     }
