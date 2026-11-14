@@ -2,12 +2,15 @@ package io.github.yuriybak.contactlabelshortcut
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ActivityNotFoundException
 import android.content.ContentUris
 import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.ContactsContract
 import android.provider.ContactsContract.CommonDataKinds.GroupMembership
@@ -51,6 +54,12 @@ class LabelContactsActivity : Activity() {
     private lateinit var iconTint: ColorStateList
     private lateinit var adapter: Adapter
     private var query = ""
+
+    /** Read on the first gesture, not when the list opens. */
+    private val gestureActions: Map<Gesture, String> by lazy(LazyThreadSafetyMode.NONE) {
+        Gesture.values().associateWith { Settings.gestureAction(this, it) }
+    }
+    private val swipeIcons = HashMap<Int, Drawable>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -194,9 +203,12 @@ class LabelContactsActivity : Activity() {
     }
 
     private fun bind(row: ContactRow, item: Item) {
-        row.name.text = item.name
+        row.resetSwipe()
+        row.nameText = item.name
         if (style.showAvatars) avatars.bind(row.avatar, item.name, item.photoUri)
         row.setOnClickListener { openContact(item) }
+        row.setOnLongClickListener { runGesture(item, Gesture.LONG_PRESS) }
+        row.swipe = { toRight -> swipeTarget(item, if (toRight) Gesture.SWIPE_RIGHT else Gesture.SWIPE_LEFT) }
 
         val actions = row.actions
         actions.removeAllViews()
@@ -215,8 +227,11 @@ class LabelContactsActivity : Activity() {
             }
         }
         if (style.showChats) {
-            for (chat in details.chats) {
-                actions.addView(appButton(chat.handler.icon, chat.title()) { launch(chat.intent()) })
+            for (messenger in details.messengers) {
+                val chat = messenger.chat
+                actions.addView(appButton(chat.handler.icon, chat.title(),
+                    onClick = { launch(chat.intent()) },
+                    onLongClick = { showMessenger(it, messenger) }))
             }
         }
         if (details.other.isNotEmpty()) {
@@ -234,13 +249,131 @@ class LabelContactsActivity : Activity() {
             if (onLongClick != null) setOnLongClickListener { onLongClick(it); true }
         }
 
-    private fun appButton(icon: Drawable, description: CharSequence, onClick: () -> Unit) =
+    private fun appButton(icon: Drawable, description: CharSequence, onClick: () -> Unit, onLongClick: (View) -> Unit) =
         actionView(dp(style.appIconSize)).apply {
             // One drawable can't be shown by several views at once
-            setImageDrawable(icon.constantState?.newDrawable(resources) ?: icon)
+            setImageDrawable(copy(icon))
             contentDescription = description
             setOnClickListener { onClick() }
+            setOnLongClickListener { onLongClick(it); true }
         }
+
+    private fun copy(icon: Drawable): Drawable = icon.constantState?.newDrawable(resources) ?: icon
+
+    /** Long press on a messenger button: its chat, calls and other rows. */
+    private fun showMessenger(anchor: View, messenger: Messenger) {
+        val actions = messenger.all
+        val menu = PopupMenu(this, anchor)
+        actions.forEachIndexed { index, action -> menu.menu.add(0, index, index, action.shortTitle()) }
+        menu.setOnMenuItemClickListener { launch(actions[it.itemId].intent()); true }
+        menu.show()
+    }
+
+    /** What a gesture does for this contact: icon, color and the action; null if nothing is set. */
+    private class GestureTarget(val icon: Drawable?, val iconSize: Int, val color: Int, val run: (() -> Unit)?)
+
+    private fun gestureTarget(item: Item, value: String): GestureTarget? {
+        val details = item.details
+        val phones = details.phones.isNotEmpty()
+        fun own(icon: Int, color: Int, available: Boolean, run: () -> Unit) =
+            GestureTarget(swipeIcon(icon), dp(style.actionIconSize), color, if (available) run else null)
+        fun app(action: AppAction?) =
+            GestureTarget(action?.handler?.icon?.let(::copy), dp(style.appIconSize), COLOR_MESSENGER,
+                action?.let { a -> { launch(a.intent()) } })
+
+        val (kind, mime) = GestureActions.parse(value)
+        if (mime != null) {
+            val messenger = details.messengers.firstOrNull { it.chat.mimeType == mime }
+            return when (kind) {
+                GestureActions.CHAT -> app(messenger?.chat)
+                GestureActions.VOICE -> app(messenger?.voice)
+                GestureActions.VIDEO -> app(messenger?.video)
+                else -> null
+            }
+        }
+        return when (kind) {
+            GestureActions.CALL -> own(R.drawable.ic_call, COLOR_CALL, phones) { withPhone(item, false) { dial(it) } }
+            GestureActions.SMS -> own(R.drawable.ic_sms, COLOR_SMS, phones) { withPhone(item, false) { sms(it) } }
+            GestureActions.CHAT -> app(details.messengers.firstOrNull()?.chat)
+            GestureActions.VOICE -> app(details.messengers.firstNotNullOfOrNull { it.voice })
+            GestureActions.VIDEO -> app(details.messengers.firstNotNullOfOrNull { it.video })
+            GestureActions.MENU -> own(R.drawable.ic_more, COLOR_OTHER, true) { showAllActions(item) }
+            GestureActions.OPEN -> own(R.drawable.ic_person, COLOR_OTHER, true) { openContact(item) }
+            GestureActions.EDIT -> own(R.drawable.ic_edit, COLOR_OTHER, true) { editContact(item) }
+            GestureActions.COPY -> own(R.drawable.ic_copy, COLOR_OTHER, phones) { withPhone(item, false) { copyNumber(item, it) } }
+            GestureActions.SHARE -> own(R.drawable.ic_share, COLOR_OTHER, true) { shareContact(item) }
+            else -> null
+        }
+    }
+
+    private fun swipeTarget(item: Item, gesture: Gesture): SwipeTarget? {
+        val target = gestureTarget(item, gestureActions.getValue(gesture)) ?: return null
+        val run = target.run
+        return if (run != null) {
+            SwipeTarget(target.icon, target.iconSize, target.color, run)
+        } else {
+            SwipeTarget(target.icon, target.iconSize, COLOR_UNAVAILABLE) { notAvailable() }
+        }
+    }
+
+    /** Returns false if nothing is set for the gesture, so that the press is not used up. */
+    private fun runGesture(item: Item, gesture: Gesture): Boolean {
+        val target = gestureTarget(item, gestureActions.getValue(gesture)) ?: return false
+        target.run?.invoke() ?: notAvailable()
+        return true
+    }
+
+    private fun notAvailable() = Toast.makeText(this, R.string.not_available, Toast.LENGTH_SHORT).show()
+
+    /** Our icons in white, to be drawn on the colored swipe background. */
+    private fun swipeIcon(res: Int): Drawable? =
+        swipeIcons[res] ?: getDrawable(res)?.mutate()?.also {
+            it.setTint(0xFFFFFFFF.toInt())
+            swipeIcons[res] = it
+        }
+
+    /** Everything that can be done with the contact, in one list. */
+    private fun showAllActions(item: Item) {
+        val titles = mutableListOf<CharSequence>()
+        val actions = mutableListOf<() -> Unit>()
+        fun add(title: CharSequence, action: () -> Unit) {
+            titles += title
+            actions += action
+        }
+        val details = item.details
+        for (phone in details.phones) add(getString(R.string.menu_call, "${phone.label}: ${phone.number}")) { dial(phone.number) }
+        for (phone in details.phones) add(getString(R.string.menu_sms, "${phone.label}: ${phone.number}")) { sms(phone.number) }
+        for (messenger in details.messengers) for (action in messenger.all) add(action.title()) { launch(action.intent()) }
+        for (action in details.other) add(action.title()) { launch(action.intent()) }
+        if (details.phones.isNotEmpty()) add(getString(R.string.ga_copy)) { withPhone(item, false) { copyNumber(item, it) } }
+        add(getString(R.string.ga_open)) { openContact(item) }
+        add(getString(R.string.ga_edit)) { editContact(item) }
+        add(getString(R.string.ga_share)) { shareContact(item) }
+        AlertDialog.Builder(this)
+            .setTitle(item.name)
+            .setItems(titles.toTypedArray()) { _, which -> actions[which]() }
+            .show()
+    }
+
+    private fun lookupUri(item: Item) = ContactsContract.Contacts.getLookupUri(item.contactId, item.lookupKey)
+
+    private fun editContact(item: Item) =
+        launch(Intent(Intent.ACTION_EDIT, lookupUri(item)).putExtra("finishActivityOnSaveCompleted", true))
+
+    private fun shareContact(item: Item) {
+        val vcard = Uri.withAppendedPath(ContactsContract.Contacts.CONTENT_VCARD_URI, item.lookupKey)
+        val send = Intent(Intent.ACTION_SEND)
+            .setType(ContactsContract.Contacts.CONTENT_VCARD_TYPE)
+            .putExtra(Intent.EXTRA_STREAM, vcard)
+            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        launch(Intent.createChooser(send, item.name))
+    }
+
+    private fun copyNumber(item: Item, number: String) {
+        getSystemService(ClipboardManager::class.java)?.setPrimaryClip(ClipData.newPlainText(item.name, number))
+        // Android 13+ shows its own confirmation
+        if (Build.VERSION.SDK_INT < 33) Toast.makeText(this, R.string.number_copied, Toast.LENGTH_SHORT).show()
+    }
 
     private fun actionView(iconSize: Int): ImageView {
         val size = dp(style.actionSize)
@@ -283,10 +416,7 @@ class LabelContactsActivity : Activity() {
         menu.show()
     }
 
-    private fun openContact(item: Item) {
-        val uri = ContactsContract.Contacts.getLookupUri(item.contactId, item.lookupKey)
-        launch(Intent(Intent.ACTION_VIEW, uri))
-    }
+    private fun openContact(item: Item) = launch(Intent(Intent.ACTION_VIEW, lookupUri(item)))
 
     private fun launch(intent: Intent) {
         try {
@@ -326,5 +456,13 @@ class LabelContactsActivity : Activity() {
             }
         }
         return result
+    }
+
+    private companion object {
+        const val COLOR_CALL = 0xFF2E7D32.toInt()
+        const val COLOR_SMS = 0xFF1565C0.toInt()
+        const val COLOR_MESSENGER = 0xFF00796B.toInt()
+        const val COLOR_OTHER = 0xFF546E7A.toInt()
+        const val COLOR_UNAVAILABLE = 0xFF757575.toInt()
     }
 }

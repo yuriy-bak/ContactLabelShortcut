@@ -13,6 +13,7 @@ import android.widget.TextView
 class MainActivity : Activity() {
 
     private lateinit var openWithButton: Button
+    private val gestureButtons = HashMap<Gesture, Button>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +48,20 @@ class MainActivity : Activity() {
         }
         layout.addView(openWithButton, wrap())
 
+        layout.addView(TextView(this).apply {
+            setText(R.string.gestures_title)
+            textSize = 16f
+        }, wrap().apply { topMargin = pad * 3 / 2 })
+
+        for (gesture in Gesture.values()) {
+            val button = Button(this).apply {
+                isAllCaps = false
+                setOnClickListener { chooseGestureAction(gesture) }
+            }
+            gestureButtons[gesture] = button
+            layout.addView(button, wrap())
+        }
+
         setContentView(ScrollView(this).apply {
             fitsSystemWindows = true
             addView(layout)
@@ -56,6 +71,24 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         openWithButton.text = Settings.openWithName(this)
+        for ((gesture, button) in gestureButtons) {
+            button.text = gestureText(gesture, GestureActions.name(this, Settings.gestureAction(this, gesture)))
+        }
+    }
+
+    private fun gestureText(gesture: Gesture, action: CharSequence) = "${getString(gesture.title)}: $action"
+
+    private fun chooseGestureAction(gesture: Gesture) {
+        val choices = GestureActions.choices(this)
+        val current = choices.indexOfFirst { it.first == Settings.gestureAction(this, gesture) }
+        AlertDialog.Builder(this)
+            .setTitle(gesture.title)
+            .setSingleChoiceItems(choices.map { it.second }.toTypedArray(), current) { dialog, which ->
+                Settings.setGestureAction(this, gesture, choices[which].first)
+                gestureButtons[gesture]?.text = gestureText(gesture, choices[which].second)
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun chooseOpenWith() {

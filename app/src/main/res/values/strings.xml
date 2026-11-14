@@ -14,7 +14,7 @@
 
 Tap the button below, or add a shortcut from the launcher: long-press the home screen → Widgets → Contact Label Shortcut → Contact label.
 
-Choose below where labels open: a contacts app or \"Contact Label Shortcut list\". The list opens instantly and has buttons to call, send an SMS or open a chat in a messenger. Long-press the call or SMS button to choose a number. The magnifier at the top searches by name or number.</string>
+Choose below where labels open: a contacts app or \"Contact Label Shortcut list\". The list opens instantly and has buttons to call, send an SMS or open a chat in a messenger. Long-press the call or SMS button to choose a number. The magnifier at the top searches by name or number. Long-press a messenger button for its calls. Swipes and long press on a contact are set below.</string>
     <string name="open_with_title">Open labels in</string>
     <string name="open_with_system">System choice (default app or ask)</string>
     <string name="action_call">Call</string>
@@ -24,4 +24,24 @@ Choose below where labels open: a contacts app or \"Contact Label Shortcut list\
     <string name="action_search">Search</string>
     <string name="search_hint">Name or number</string>
     <string name="nothing_found">Nothing found</string>
+    <string name="gestures_title">Gestures in the list</string>
+    <string name="gesture_swipe_right">Swipe right</string>
+    <string name="gesture_swipe_left">Swipe left</string>
+    <string name="gesture_long_press">Long press</string>
+    <string name="ga_none">Nothing</string>
+    <string name="ga_menu">Menu of all actions</string>
+    <string name="ga_open">Open contact</string>
+    <string name="ga_edit">Edit contact</string>
+    <string name="ga_copy">Copy number</string>
+    <string name="ga_share">Share contact</string>
+    <string name="ga_chat">Chat in the first messenger</string>
+    <string name="ga_voice">Voice call in the first messenger</string>
+    <string name="ga_video">Video call in the first messenger</string>
+    <string name="ga_chat_in">%1$s chat</string>
+    <string name="ga_voice_in">%1$s voice call</string>
+    <string name="ga_video_in">%1$s video call</string>
+    <string name="menu_call">Call %1$s</string>
+    <string name="menu_sms">SMS %1$s</string>
+    <string name="not_available">This contact has nothing for this action</string>
+    <string name="number_copied">Number copied</string>
 </resources>

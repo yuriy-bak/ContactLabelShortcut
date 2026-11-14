@@ -25,13 +25,29 @@ class AppAction(val dataId: Long, val mimeType: String, val summary: String?, va
     /** Text for a menu: "WhatsApp: Voice call +1 555…". */
     fun title(): CharSequence =
         if (summary.isNullOrBlank()) handler.appName else "${handler.appName}: $summary"
+
+    /** Text for the menu of one messenger, where its name is already known: "Voice call +1 555…". */
+    fun shortTitle(): CharSequence = summary?.takeIf { it.isNotBlank() } ?: handler.appName
+}
+
+/**
+ * A messenger the contact is in: the chat (its button) and the rest of its rows,
+ * such as voice and video calls (the long-press menu of the button).
+ */
+class Messenger(val chat: AppAction, val others: List<AppAction>) {
+    /** The chat first, then the other rows. */
+    val all: List<AppAction> get() = listOf(chat) + others
+
+    /** By the MIME type: messengers name their call rows "….call", "….voip.call", "….call.video", …. */
+    val video: AppAction? get() = others.firstOrNull { "video" in it.mimeType }
+    val voice: AppAction? get() = others.firstOrNull { "video" !in it.mimeType && ("call" in it.mimeType || "voip" in it.mimeType) }
 }
 
 /** Phones, messenger chats and other app actions of one contact. */
 class ContactDetails(
     val phones: List<PhoneNumber>,
-    /** Chats in known messengers, one per messenger, shown as buttons. */
-    val chats: List<AppAction>,
+    /** Known messengers, one button each, in the order of [ContactDetailsLoader.CHAT_MIME_TYPES]. */
+    val messengers: List<Messenger>,
     /** Everything else that some app can open, shown in the "more" menu. */
     val other: List<AppAction>,
 ) {
@@ -107,24 +123,27 @@ class ContactDetailsLoader(private val context: Context) {
         val result = HashMap<Long, ContactDetails>()
         for (id in contactIds) {
             val numbers = phones[id]?.let(::dedupe).orEmpty()
+            val all = actions[id].orEmpty()
             val chats = mutableListOf<AppAction>()
-            val other = mutableListOf<AppAction>()
-            for (action in actions[id].orEmpty()) {
-                if (action.mimeType in CHAT_MIME_TYPES && chats.none { it.mimeType == action.mimeType }) {
-                    chats += action
-                } else {
-                    other += action
-                }
+            for (action in all) {
+                if (action.mimeType in CHAT_MIME_TYPES && chats.none { it.mimeType == action.mimeType }) chats += action
             }
             chats.sortBy { CHAT_MIME_TYPES.indexOf(it.mimeType) }
-            if (numbers.isNotEmpty() || chats.isNotEmpty() || other.isNotEmpty()) {
-                result[id] = ContactDetails(numbers, chats, other)
+            // The other rows of a messenger's app (calls, video calls) go to its button
+            val messengers = chats.map { chat ->
+                Messenger(chat, all.filter { it !== chat && it.mimeType !in CHAT_MIME_TYPES && it.handler.packageName == chat.handler.packageName })
+            }
+            val used = messengers.flatMapTo(HashSet()) { it.all }
+            val other = all.filter { it !in used }
+            if (numbers.isNotEmpty() || messengers.isNotEmpty() || other.isNotEmpty()) {
+                result[id] = ContactDetails(numbers, messengers, other)
             }
         }
         return result
     }
 
-    private fun handler(mimeType: String): DataHandler? {
+    /** The app that opens rows of [mimeType], or null; cached. */
+    fun handler(mimeType: String): DataHandler? {
         if (handlers.containsKey(mimeType)) return handlers[mimeType]
         val intent = Intent(Intent.ACTION_VIEW)
             .setDataAndType(ContentUris.withAppendedId(Data.CONTENT_URI, 1), mimeType)

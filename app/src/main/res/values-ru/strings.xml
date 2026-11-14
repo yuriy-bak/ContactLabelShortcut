@@ -13,7 +13,7 @@
 
 Нажмите кнопку ниже или добавьте ярлык из лаунчера: долгое нажатие на рабочем столе → Виджеты → Contact Label Shortcut → Метка контактов.
 
-Ниже выберите, где открывать метку: в приложении контактов или в списке Contact Label Shortcut. Список открывается мгновенно, в нём есть кнопки звонка, SMS и чатов в мессенджерах. Долгое нажатие на кнопку звонка или SMS — выбор номера. Лупа вверху — поиск по имени или номеру.</string>
+Ниже выберите, где открывать метку: в приложении контактов или в списке Contact Label Shortcut. Список открывается мгновенно, в нём есть кнопки звонка, SMS и чатов в мессенджерах. Долгое нажатие на кнопку звонка или SMS — выбор номера. Лупа вверху — поиск по имени или номеру. Долгое нажатие на значок мессенджера — его звонки. Свайпы и долгое нажатие на контакт настраиваются ниже.</string>
     <string name="open_with_title">Открывать метку в</string>
     <string name="open_with_system">Системный выбор (приложение по умолчанию или вопрос)</string>
     <string name="action_call">Позвонить</string>
@@ -23,4 +23,24 @@
     <string name="action_search">Поиск</string>
     <string name="search_hint">Имя или номер</string>
     <string name="nothing_found">Ничего не найдено</string>
+    <string name="gestures_title">Жесты в списке</string>
+    <string name="gesture_swipe_right">Свайп вправо</string>
+    <string name="gesture_swipe_left">Свайп влево</string>
+    <string name="gesture_long_press">Долгое нажатие</string>
+    <string name="ga_none">Ничего</string>
+    <string name="ga_menu">Меню всех действий</string>
+    <string name="ga_open">Открыть контакт</string>
+    <string name="ga_edit">Изменить контакт</string>
+    <string name="ga_copy">Скопировать номер</string>
+    <string name="ga_share">Поделиться контактом</string>
+    <string name="ga_chat">Чат в первом мессенджере</string>
+    <string name="ga_voice">Аудиозвонок в первом мессенджере</string>
+    <string name="ga_video">Видеозвонок в первом мессенджере</string>
+    <string name="ga_chat_in">Чат %1$s</string>
+    <string name="ga_voice_in">Аудиозвонок %1$s</string>
+    <string name="ga_video_in">Видеозвонок %1$s</string>
+    <string name="menu_call">Позвонить: %1$s</string>
+    <string name="menu_sms">SMS: %1$s</string>
+    <string name="not_available">У этого контакта такого нет</string>
+    <string name="number_copied">Номер скопирован</string>
 </resources>

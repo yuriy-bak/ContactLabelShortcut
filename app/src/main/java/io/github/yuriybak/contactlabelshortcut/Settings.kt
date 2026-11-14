@@ -74,5 +74,13 @@ object Settings {
             ?: context.getString(R.string.open_with_system)
     }
 
+    /** One of [GestureActions]. */
+    fun gestureAction(context: Context, gesture: Gesture): String =
+        prefs(context).getString(gesture.key, null) ?: gesture.default
+
+    fun setGestureAction(context: Context, gesture: Gesture, value: String) {
+        prefs(context).edit().putString(gesture.key, value).apply()
+    }
+
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 }
