@@ -9,5 +9,6 @@
     <string name="no_contacts">No contacts with this label</string>
     <string name="label_not_found">The label was not found. Create the shortcut again.</string>
     <string name="pin_not_supported">This launcher cannot add shortcuts</string>
-    <string name="instructions">Add a home screen shortcut that opens contacts with a chosen label.\n\nTap the button below, or add a shortcut from the launcher: long-press the home screen → Widgets → Label Shortcut → Contact label.\n\nThe label opens in your default contacts app. If it cannot open labels, a list of the label\'s contacts is shown.</string>
+    <string name="label_list_entry">Label Shortcut list</string>
+    <string name="instructions">Add a home screen shortcut that opens contacts with a chosen label.\n\nTap the button below, or add a shortcut from the launcher: long-press the home screen → Widgets → Label Shortcut → Contact label.\n\nThe label opens in your default contacts app. If it cannot open labels, a list of the label\'s contacts is shown. You can also pick \"Label Shortcut list\" when Android asks which app to use.</string>
 </resources>

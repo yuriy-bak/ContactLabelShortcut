@@ -51,8 +51,16 @@
             android:taskAffinity=""
             android:theme="@android:style/Theme.NoDisplay" />
 
+        <!-- Our own label list; also offered to other apps as a way to open a label -->
         <activity
             android:name=".LabelContactsActivity"
-            android:exported="false" />
+            android:exported="true"
+            android:label="@string/label_list_entry">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="vnd.android.cursor.item/group" />
+            </intent-filter>
+        </activity>
     </application>
 </manifest>

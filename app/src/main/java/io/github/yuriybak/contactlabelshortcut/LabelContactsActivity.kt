@@ -1,6 +1,7 @@
 package io.github.yuriybak.contactlabelshortcut
 
 import android.app.Activity
+import android.content.ContentUris
 import android.content.Intent
 import android.os.Bundle
 import android.provider.ContactsContract
@@ -18,10 +19,16 @@ class LabelContactsActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val groupId = intent.getLongExtra(Label.EXTRA_GROUP_ID, -1L)
-        title = intent.getStringExtra(Label.EXTRA_TITLE) ?: getString(R.string.app_name)
+        // From our shortcut: extras; from the system chooser: content://com.android.contacts/groups/<id>
+        val groupId = intent.getLongExtra(Label.EXTRA_GROUP_ID, -1L).takeIf { it >= 0 }
+            ?: intent.data?.lastPathSegment?.toLongOrNull()
+            ?: -1L
+        val permitted = Labels.hasPermission(this)
+        title = intent.getStringExtra(Label.EXTRA_TITLE)
+            ?: (if (permitted && groupId >= 0) loadTitle(groupId) else null)
+            ?: getString(R.string.app_name)
 
-        val items = if (groupId >= 0 && Labels.hasPermission(this)) load(groupId) else emptyList()
+        val items = if (groupId >= 0 && permitted) load(groupId) else emptyList()
 
         if (items.isEmpty()) {
             setContentView(TextView(this).apply {
@@ -44,6 +51,12 @@ class LabelContactsActivity : Activity() {
         }
         setContentView(list)
     }
+
+    private fun loadTitle(groupId: Long): String? =
+        contentResolver.query(
+            ContentUris.withAppendedId(ContactsContract.Groups.CONTENT_URI, groupId),
+            arrayOf(ContactsContract.Groups.TITLE), null, null, null,
+        )?.use { c -> if (c.moveToFirst()) c.getString(0) else null }
 
     private fun load(groupId: Long): List<Item> {
         val seen = HashSet<Long>()
