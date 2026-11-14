@@ -3,7 +3,6 @@ package io.github.yuriybak.contactlabelshortcut
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Outline
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.text.StaticLayout
@@ -13,7 +12,6 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
-import android.view.ViewOutlineProvider
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -22,6 +20,18 @@ import kotlin.math.max
 
 /** What a swipe does: drawn under the row as it moves, run when the row is let go past the threshold. */
 class SwipeTarget(val icon: Drawable?, val iconSize: Int, val color: Int, val run: () -> Unit)
+
+/**
+ * A button of a row: our own icon ([iconRes], tinted) or an app's ([appIcon], as it is).
+ * [onLongClick] null: the button has no long press.
+ */
+class RowAction(
+    val iconRes: Int,
+    val appIcon: Drawable?,
+    val description: CharSequence,
+    val onClick: () -> Unit,
+    val onLongClick: (() -> Unit)?,
+)
 
 /**
  * One contact in the label list: avatar, the name on the first line, the action buttons on
@@ -35,17 +45,15 @@ class SwipeTarget(val icon: Drawable?, val iconSize: Int, val color: Int, val ru
  *
  * A horizontal swipe moves the row and shows [SwipeTarget] under it; touch handling costs
  * nothing until a finger moves sideways.
+ *
+ * The button views are kept when the row is reused for another contact ([setActions]), so
+ * scrolling creates no views.
  */
 class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(context) {
 
     val avatar = ImageView(context).apply {
         scaleType = ImageView.ScaleType.CENTER_CROP
-        outlineProvider = object : ViewOutlineProvider() {
-            override fun getOutline(view: View, outline: Outline) {
-                outline.setOval(0, 0, view.width, view.height)
-            }
-        }
-        clipToOutline = true
+        clipToCircle()
         visibility = if (style.showAvatars) View.VISIBLE else View.GONE
     }
 
@@ -66,10 +74,20 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
     private var splitWidth = -1
 
     /** Call, SMS and messenger buttons, before [trailing]. */
-    val actions = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
+    private val actions = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
 
     /** The "more" button, at the end of the line. */
-    val trailing = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
+    private val trailing = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
+
+    /** Button views of [actions], reused; those past [actionCount] are hidden. */
+    private val actionSlots = ArrayList<ButtonSlot>()
+    private var actionCount = 0
+    private var trailingSlot: ButtonSlot? = null
+    private val actionSize = context.dp(style.actionSize)
+    private val ownIconSize = context.dp(style.actionIconSize)
+    private val appIconSize = context.dp(style.appIconSize)
+    private val iconTint = context.themeColor(android.R.attr.textColorSecondary)
+        ?: android.content.res.ColorStateList.valueOf(0xFF757575.toInt())
 
     private val avatarSize = context.dp(style.avatarSize)
     private val avatarGap = context.dp(style.avatarGap)
@@ -115,9 +133,80 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
         addView(nameRest)
         addView(actions)
         addView(trailing)
-        val attrs = context.obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackground))
-        background = attrs.getDrawable(0)
-        attrs.recycle()
+        background = context.themeDrawable(android.R.attr.selectableItemBackground)
+    }
+
+    /** A button view and the app icon it shows (the drawable it was copied from). */
+    private class ButtonSlot(val view: ImageView) {
+        var source: Drawable? = null
+    }
+
+    /** Shows [list] as the buttons and [more] (or nothing) at the end; the views are reused. */
+    fun setActions(list: List<RowAction>, more: RowAction?) {
+        while (actionSlots.size < list.size) {
+            val slot = ButtonSlot(newButton())
+            actionSlots += slot
+            actions.addView(slot.view)
+        }
+        for ((i, slot) in actionSlots.withIndex()) {
+            if (i < list.size) show(slot, list[i]) else hide(slot)
+        }
+        if (more != null) {
+            val slot = trailingSlot ?: ButtonSlot(newButton()).also {
+                trailingSlot = it
+                trailing.addView(it.view)
+            }
+            show(slot, more)
+        } else {
+            trailingSlot?.let(::hide)
+        }
+        if (actionCount != list.size) {
+            actionCount = list.size
+            requestLayout()
+        }
+    }
+
+    private fun newButton() = ImageView(context).apply {
+        layoutParams = LinearLayout.LayoutParams(actionSize, actionSize)
+        scaleType = ImageView.ScaleType.FIT_CENTER
+        background = context.themeDrawable(android.R.attr.selectableItemBackgroundBorderless)
+    }
+
+    private fun show(slot: ButtonSlot, action: RowAction) {
+        val view = slot.view
+        val app = action.appIcon
+        val pad = ((actionSize - (if (app != null) appIconSize else ownIconSize)) / 2).coerceAtLeast(0)
+        if (view.paddingLeft != pad) view.setPadding(pad, pad, pad, pad)
+        if (app != null) {
+            if (slot.source !== app) {
+                // One drawable can't be shown by several views at once
+                view.imageTintList = null
+                view.setImageDrawable(app.constantState?.newDrawable(resources) ?: app)
+                slot.source = app
+            }
+        } else {
+            slot.source = null
+            view.setImageResource(action.iconRes) // nothing is done if it already shows it
+            view.imageTintList = iconTint
+        }
+        view.contentDescription = action.description
+        view.setOnClickListener { action.onClick() }
+        val long = action.onLongClick
+        if (long != null) {
+            view.setOnLongClickListener { long(); true }
+        } else {
+            view.setOnLongClickListener(null)
+            view.isLongClickable = false
+        }
+        view.visibility = View.VISIBLE
+    }
+
+    private fun hide(slot: ButtonSlot) {
+        if (slot.view.visibility == View.GONE) return
+        slot.view.visibility = View.GONE
+        slot.view.setOnClickListener(null)
+        slot.view.setOnLongClickListener(null)
+        requestLayout()
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -137,7 +226,7 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
         actions.measure(unspecified, unspecified)
         trailing.measure(unspecified, unspecified)
 
-        val buttons = actions.childCount + trailing.childCount
+        val buttons = actionCount + (if (trailingSlot?.view?.visibility == View.VISIBLE) 1 else 0)
         inline = style.moreOnly || (buttonsKnown && style.inlineButtons > 0 && buttons <= style.inlineButtons)
         if (inline) {
             // One line: the name (wrapping if it must) and the buttons; the place of "more" is kept
@@ -343,7 +432,5 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
 
 private fun nameView(context: Context, textSize: Float) = TextView(context).apply {
     setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize)
-    val attrs = context.obtainStyledAttributes(intArrayOf(android.R.attr.textColorPrimary))
-    setTextColor(attrs.getColorStateList(0))
-    attrs.recycle()
+    context.themeColor(android.R.attr.textColorPrimary)?.let(::setTextColor)
 }

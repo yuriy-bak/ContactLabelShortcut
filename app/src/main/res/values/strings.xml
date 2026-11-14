@@ -40,8 +40,6 @@ Choose below where labels open: a contacts app or \"Contact Label Shortcut list\
     <string name="ga_chat_in">%1$s chat</string>
     <string name="ga_voice_in">%1$s voice call</string>
     <string name="ga_video_in">%1$s video call</string>
-    <string name="menu_call">Call %1$s</string>
-    <string name="menu_sms">SMS %1$s</string>
     <string name="not_available">This contact has nothing for this action</string>
     <string name="number_copied">Number copied</string>
     <string name="change_icon">Change shortcut icon</string>

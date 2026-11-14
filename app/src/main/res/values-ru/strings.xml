@@ -39,8 +39,6 @@
     <string name="ga_chat_in">Чат %1$s</string>
     <string name="ga_voice_in">Аудиозвонок %1$s</string>
     <string name="ga_video_in">Видеозвонок %1$s</string>
-    <string name="menu_call">Позвонить: %1$s</string>
-    <string name="menu_sms">SMS: %1$s</string>
     <string name="not_available">У этого контакта такого нет</string>
     <string name="number_copied">Номер скопирован</string>
     <string name="change_icon">Изменить значок ярлыка</string>

@@ -10,10 +10,18 @@ import android.provider.ContactsContract.CommonDataKinds
 import android.provider.ContactsContract.Data
 
 /** A phone number of a contact. */
-class PhoneNumber(val number: String, val label: CharSequence, val superPrimary: Boolean)
+class PhoneNumber(val number: String, val label: CharSequence, val superPrimary: Boolean) {
+    /** "Mobile: +1 555 …", for menus. */
+    override fun toString() = "$label: $number"
+}
 
-/** The app that handles a data row MIME type (a messenger and the like). */
-class DataHandler(val packageName: String, val appName: CharSequence, val icon: Drawable)
+/**
+ * The app that handles a data row MIME type (a messenger and the like).
+ * The icon is loaded on first use: the settings need only the name.
+ */
+class DataHandler(val packageName: String, val appName: CharSequence, loadIcon: () -> Drawable) {
+    val icon: Drawable by lazy(loadIcon)
+}
 
 /** A data row of another app (a chat, a call in a messenger, …) that has a handler. */
 class AppAction(val dataId: Long, val mimeType: String, val summary: String?, val handler: DataHandler) {
@@ -26,8 +34,6 @@ class AppAction(val dataId: Long, val mimeType: String, val summary: String?, va
     fun title(): CharSequence =
         if (summary.isNullOrBlank()) handler.appName else "${handler.appName}: $summary"
 
-    /** Text for the menu of one messenger, where its name is already known: "Voice call +1 555…". */
-    fun shortTitle(): CharSequence = summary?.takeIf { it.isNotBlank() } ?: handler.appName
 }
 
 /**
@@ -63,6 +69,9 @@ class ContactDetails(
 /**
  * Loads [ContactDetails] for many contacts with one query. Meant for a background
  * thread; handlers (and their icons) are looked up once per MIME type and cached.
+ *
+ * The rows of known messengers open only in that messenger's own app: another app that
+ * declares the same MIME type can't take over the button.
  */
 class ContactDetailsLoader(private val context: Context) {
 
@@ -120,9 +129,12 @@ class ContactDetailsLoader(private val context: Context) {
             }
         }
 
+        // Load the icons here, in the background, not when the rows are drawn
+        for (handler in handlers.values) handler?.icon
+
         val result = HashMap<Long, ContactDetails>()
         for (id in contactIds) {
-            val numbers = phones[id]?.let(::dedupe).orEmpty()
+            val numbers = phones[id]?.let(::dedupePhones).orEmpty()
             val all = actions[id].orEmpty()
             val chats = mutableListOf<AppAction>()
             for (action in all) {
@@ -147,35 +159,35 @@ class ContactDetailsLoader(private val context: Context) {
         if (handlers.containsKey(mimeType)) return handlers[mimeType]
         val intent = Intent(Intent.ACTION_VIEW)
             .setDataAndType(ContentUris.withAppendedId(Data.CONTENT_URI, 1), mimeType)
+        val allowed = allowedPackages(mimeType)
         val info = pm.queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
             .firstOrNull {
                 val pkg = it.activityInfo.packageName
-                pkg != context.packageName && pkg !in contactsApps
+                if (allowed != null) pkg in allowed else pkg != context.packageName && pkg !in contactsApps
             }
         val handler = info?.let {
             val app = it.activityInfo.applicationInfo
-            DataHandler(it.activityInfo.packageName, app.loadLabel(pm), app.loadIcon(pm))
+            DataHandler(it.activityInfo.packageName, app.loadLabel(pm)) { app.loadIcon(pm) }
         }
         handlers[mimeType] = handler
         return handler
     }
 
-    /** The same number may be stored several times (by different accounts or formats). */
-    private fun dedupe(list: List<PhoneNumber>): List<PhoneNumber> {
-        val byKey = LinkedHashMap<String, PhoneNumber>()
-        for (phone in list) {
-            val key = phone.number.filter { it.isDigit() || it == '+' }.ifEmpty { phone.number }
-            val existing = byKey[key]
-            if (existing == null) {
-                byKey[key] = phone
-            } else if (phone.superPrimary && !existing.superPrimary) {
-                byKey[key] = PhoneNumber(existing.number, existing.label, true)
-            }
-        }
-        return byKey.values.toList()
-    }
-
     companion object {
+        /**
+         * Known messengers by the package in their MIME types (vnd.<package>.…), with the apps
+         * allowed to open their rows: the messenger itself and its official editions.
+         * Keep in sync with <queries> in the manifest.
+         */
+        val MESSENGER_APPS = mapOf(
+            "com.whatsapp" to setOf("com.whatsapp"),
+            "com.whatsapp.w4b" to setOf("com.whatsapp.w4b"),
+            "org.telegram.messenger" to setOf("org.telegram.messenger", "org.telegram.messenger.web", "org.telegram.messenger.beta"),
+            "org.thoughtcrime.securesms" to setOf("org.thoughtcrime.securesms"),
+            "com.viber.voip" to setOf("com.viber.voip"),
+            "ch.threema.app" to setOf("ch.threema.app", "ch.threema.app.libre", "ch.threema.app.work"),
+        )
+
         /** Chats of known messengers, in the order their buttons are shown. */
         val CHAT_MIME_TYPES = listOf(
             "vnd.android.cursor.item/vnd.com.whatsapp.profile",
@@ -204,4 +216,31 @@ class ContactDetailsLoader(private val context: Context) {
             CommonDataKinds.Identity.CONTENT_ITEM_TYPE,
         )
     }
+}
+
+/** The apps that may open rows of [mimeType] if it is a known messenger's; null: any app. */
+fun allowedPackages(mimeType: String): Set<String>? {
+    val prefix = "vnd.android.cursor.item/vnd."
+    if (!mimeType.startsWith(prefix)) return null
+    val rest = mimeType.substring(prefix.length)
+    // The longest match first: "com.whatsapp.w4b.profile" belongs to com.whatsapp.w4b
+    val key = ContactDetailsLoader.MESSENGER_APPS.keys
+        .filter { rest.startsWith("$it.") }
+        .maxByOrNull { it.length }
+    return key?.let { ContactDetailsLoader.MESSENGER_APPS.getValue(it) }
+}
+
+/** The same number may be stored several times (by different accounts or formats). */
+fun dedupePhones(list: List<PhoneNumber>): List<PhoneNumber> {
+    val byKey = LinkedHashMap<String, PhoneNumber>()
+    for (phone in list) {
+        val key = phone.number.filter { it.isDigit() || it == '+' }.ifEmpty { phone.number }
+        val existing = byKey[key]
+        if (existing == null) {
+            byKey[key] = phone
+        } else if (phone.superPrimary && !existing.superPrimary) {
+            byKey[key] = PhoneNumber(existing.number, existing.label, true)
+        }
+    }
+    return byKey.values.toList()
 }

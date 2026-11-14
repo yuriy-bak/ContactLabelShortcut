@@ -71,8 +71,7 @@ data class ShortcutIcon(val text: String, val color: Int) {
 
         /** The first letter of the title on a color picked from the title. */
         fun default(title: String): ShortcutIcon {
-            val letter = title.trim().firstOrNull { it.isLetterOrDigit() }?.uppercaseChar()?.toString() ?: "?"
-            return ShortcutIcon(letter, COLORS[(title.hashCode() and Int.MAX_VALUE) % COLORS.size])
+            return ShortcutIcon(initialOf(title), colorFor(title, COLORS))
         }
 
         /** Cuts [text] to [MAX_LENGTH] characters without splitting an emoji. */

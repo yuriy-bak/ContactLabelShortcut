@@ -3,14 +3,12 @@ package io.github.yuriybak.contactlabelshortcut
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.DialogInterface
-import android.graphics.Outline
 import android.graphics.drawable.GradientDrawable
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
 import android.view.Gravity
 import android.view.View
-import android.view.ViewOutlineProvider
 import android.widget.EditText
 import android.widget.GridLayout
 import android.widget.ImageView
@@ -30,8 +28,7 @@ object IconEditor {
         onCancel: () -> Unit,
         onDone: (ShortcutIcon) -> Unit,
     ) {
-        val density = activity.resources.displayMetrics.density
-        fun dp(v: Int) = (v * density).toInt()
+        fun dp(v: Int) = activity.dp(v)
 
         val fallback = ShortcutIcon.default(title)
         var text = initial.text
@@ -39,12 +36,7 @@ object IconEditor {
         fun current() = ShortcutIcon(text.ifBlank { fallback.text }, color)
 
         val preview = ImageView(activity).apply {
-            outlineProvider = object : ViewOutlineProvider() {
-                override fun getOutline(view: View, outline: Outline) {
-                    outline.setOval(0, 0, view.width, view.height)
-                }
-            }
-            clipToOutline = true
+            clipToCircle()
             scaleType = ImageView.ScaleType.CENTER_CROP
         }
         // The visible part of an adaptive icon is its middle 72 of 108dp
@@ -79,12 +71,8 @@ object IconEditor {
             })
         }
 
-        val ring = activity.obtainStyledAttributes(intArrayOf(android.R.attr.textColorPrimary)).run {
-            getColor(0, 0xFF202124.toInt()).also { recycle() }
-        }
-        val outline = activity.obtainStyledAttributes(intArrayOf(android.R.attr.textColorSecondary)).run {
-            getColor(0, 0xFF5F6368.toInt()).also { recycle() }
-        }
+        val ring = activity.themeColor(android.R.attr.textColorPrimary)?.defaultColor ?: 0xFF202124.toInt()
+        val outline = activity.themeColor(android.R.attr.textColorSecondary)?.defaultColor ?: 0xFF5F6368.toInt()
         val swatches = ArrayList<View>()
         fun paintSwatches() {
             ShortcutIcon.PALETTE.forEachIndexed { i, c ->

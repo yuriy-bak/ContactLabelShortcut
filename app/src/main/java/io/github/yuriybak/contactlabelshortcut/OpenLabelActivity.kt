@@ -55,7 +55,9 @@ class OpenLabelActivity : Activity() {
             startActivity(intent)
             return true
         } catch (e: ActivityNotFoundException) {
+            // No such app (any more): the fallback below
         } catch (e: SecurityException) {
+            // The app does not let us start it: the fallback below
         }
         fallback?.let { startActivity(it) }
         return false

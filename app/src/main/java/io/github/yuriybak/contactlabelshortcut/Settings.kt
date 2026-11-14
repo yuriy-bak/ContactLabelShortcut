@@ -4,6 +4,7 @@ import android.content.ComponentName
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -66,11 +67,11 @@ object Settings {
         return text
     }
 
-    /** Human readable name of the current [openWith] value. */
-    fun openWithName(context: Context): CharSequence = when (val value = openWith(context)) {
+    /** Human readable name of the current [openWith] value; [apps] are the [labelApps]. */
+    fun openWithName(context: Context, apps: List<LabelApp>): CharSequence = when (val value = openWith(context)) {
         OPEN_WITH_SYSTEM -> context.getString(R.string.open_with_system)
         OPEN_WITH_BUILTIN -> context.getString(R.string.label_list_entry)
-        else -> labelApps(context).firstOrNull { it.component == value }?.let(::describe)
+        else -> apps.firstOrNull { it.component == value }?.let(::describe)
             ?: context.getString(R.string.open_with_system)
     }
 
@@ -82,7 +83,7 @@ object Settings {
         prefs(context).edit().putString(gesture.key, value).apply()
     }
 
-    /** Buttons shown in a row of the label list. */
+    /** Buttons shown in a row of the label list; all are shown by default. */
     enum class RowButton(val key: String, val title: Int) {
         CALL("show_call", R.string.action_call),
         SMS("show_sms", R.string.action_sms),
@@ -98,15 +99,11 @@ object Settings {
 
     fun sortByLastName(context: Context): Boolean = prefs(context).getBoolean(KEY_SORT_BY_LAST_NAME, false)
 
-    fun setSortByLastName(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_SORT_BY_LAST_NAME, value).apply()
-    }
+    fun setSortByLastName(context: Context, value: Boolean) = putBoolean(context, KEY_SORT_BY_LAST_NAME, value)
 
     fun starredFirst(context: Context): Boolean = prefs(context).getBoolean(KEY_STARRED_FIRST, false)
 
-    fun setStarredFirst(context: Context, value: Boolean) {
-        prefs(context).edit().putBoolean(KEY_STARRED_FIRST, value).apply()
-    }
+    fun setStarredFirst(context: Context, value: Boolean) = putBoolean(context, KEY_STARRED_FIRST, value)
 
     /** See [ListStyle.inlineButtons]. */
     fun inlineButtons(context: Context): Int = prefs(context).getInt(KEY_INLINE_BUTTONS, 0)
@@ -115,26 +112,53 @@ object Settings {
         prefs(context).edit().putInt(KEY_INLINE_BUTTONS, value).apply()
     }
 
-    fun showButton(context: Context, button: RowButton): Boolean = prefs(context).getBoolean(button.key, true)
+    fun showButton(context: Context, button: RowButton): Boolean = showButton(prefs(context), button)
 
-    fun setShowButton(context: Context, button: RowButton, show: Boolean) {
-        prefs(context).edit().putBoolean(button.key, show).apply()
-    }
+    private fun showButton(prefs: SharedPreferences, button: RowButton) = prefs.getBoolean(button.key, true)
+
+    fun setShowButton(context: Context, button: RowButton, show: Boolean) = putBoolean(context, button.key, show)
 
     fun listStyle(context: Context): ListStyle {
         val prefs = prefs(context)
         return ListStyle.DEFAULT.copy(
-            showCall = prefs.getBoolean(RowButton.CALL.key, true),
-            showSms = prefs.getBoolean(RowButton.SMS.key, true),
-            showWhatsApp = prefs.getBoolean(RowButton.WHATSAPP.key, true),
-            showTelegram = prefs.getBoolean(RowButton.TELEGRAM.key, true),
-            showSignal = prefs.getBoolean(RowButton.SIGNAL.key, true),
-            showOtherChats = prefs.getBoolean(RowButton.OTHER_CHATS.key, true),
+            showCall = showButton(prefs, RowButton.CALL),
+            showSms = showButton(prefs, RowButton.SMS),
+            showWhatsApp = showButton(prefs, RowButton.WHATSAPP),
+            showTelegram = showButton(prefs, RowButton.TELEGRAM),
+            showSignal = showButton(prefs, RowButton.SIGNAL),
+            showOtherChats = showButton(prefs, RowButton.OTHER_CHATS),
             inlineButtons = prefs.getInt(KEY_INLINE_BUTTONS, 0),
+        )
+    }
+
+    fun listOrder(context: Context): ListOrder {
+        val prefs = prefs(context)
+        return ListOrder(
             sortByLastName = prefs.getBoolean(KEY_SORT_BY_LAST_NAME, false),
             starredFirst = prefs.getBoolean(KEY_STARRED_FIRST, false),
         )
     }
 
+    /** Calls [listener] when any setting changes; keep the listener referenced while it is needed. */
+    fun registerListener(context: Context, listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        prefs(context).registerOnSharedPreferenceChangeListener(listener)
+    }
+
+    fun unregisterListener(context: Context, listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        prefs(context).unregisterOnSharedPreferenceChangeListener(listener)
+    }
+
+    private fun putBoolean(context: Context, key: String, value: Boolean) {
+        prefs(context).edit().putBoolean(key, value).apply()
+    }
+
     private fun prefs(context: Context) = context.getSharedPreferences(FILE, Context.MODE_PRIVATE)
 }
+
+/** The order of the label list: by the first or the last name, starred contacts first or not. */
+data class ListOrder(
+    /** Order by the last name (the provider's alternative sort key) instead of the first name. */
+    val sortByLastName: Boolean = false,
+    /** Starred contacts first, each part in the chosen order. */
+    val starredFirst: Boolean = false,
+)

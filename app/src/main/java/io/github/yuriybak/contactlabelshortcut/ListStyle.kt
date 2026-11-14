@@ -1,9 +1,7 @@
 package io.github.yuriybak.contactlabelshortcut
 
-import android.content.Context
-
 /**
- * Sizes and visibility of the label list elements, in dp/sp.
+ * Sizes and visibility of the label list elements, in dp/sp (the order is [ListOrder]).
  * Kept in one place so that list styles can later be chosen in the settings.
  */
 data class ListStyle(
@@ -29,10 +27,6 @@ data class ListStyle(
     val showOtherChats: Boolean = true,
     /** A row with at most this many buttons (with "more") is one line; 0: buttons always on the second line. */
     val inlineButtons: Int = 0,
-    /** Order by the last name (the provider's alternative sort key) instead of the first name. */
-    val sortByLastName: Boolean = false,
-    /** Starred contacts first, each part in the chosen order. */
-    val starredFirst: Boolean = false,
 ) {
     private val shown get() = listOf(showCall, showSms, showWhatsApp, showTelegram, showSignal, showOtherChats)
 
@@ -54,5 +48,3 @@ data class ListStyle(
         val DEFAULT = ListStyle()
     }
 }
-
-fun Context.dp(value: Int): Int = (value * resources.displayMetrics.density + 0.5f).toInt()

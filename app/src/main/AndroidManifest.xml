@@ -12,9 +12,13 @@
         <package android:name="com.whatsapp" />
         <package android:name="com.whatsapp.w4b" />
         <package android:name="org.telegram.messenger" />
+        <package android:name="org.telegram.messenger.web" />
+        <package android:name="org.telegram.messenger.beta" />
         <package android:name="org.thoughtcrime.securesms" />
         <package android:name="com.viber.voip" />
         <package android:name="ch.threema.app" />
+        <package android:name="ch.threema.app.libre" />
+        <package android:name="ch.threema.app.work" />
     </queries>
 
     <application
@@ -48,7 +52,9 @@
             </intent-filter>
         </activity>
 
-        <!-- Trampoline started by the home screen shortcut -->
+        <!-- Trampoline started by the home screen shortcut. Exported: launchers that take
+             the legacy ACTION_CREATE_SHORTCUT result start its intent themselves. It only
+             opens a label, it returns nothing to the caller. -->
         <activity
             android:name=".OpenLabelActivity"
             android:excludeFromRecents="true"

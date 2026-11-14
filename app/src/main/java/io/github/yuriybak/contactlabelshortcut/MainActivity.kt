@@ -3,6 +3,7 @@ package io.github.yuriybak.contactlabelshortcut
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.os.Bundle
@@ -22,9 +23,17 @@ class MainActivity : Activity() {
     private lateinit var inlineButtonsButton: Button
     private lateinit var sortButton: Button
 
+    /** Finds the installed messengers for the gesture names; one for the screen, it caches them. */
+    private val loader by lazy(LazyThreadSafetyMode.NONE) { ContactDetailsLoader(this) }
+    private val labelApps by lazy(LazyThreadSafetyMode.NONE) { Settings.labelApps(this) }
+
+    /** Tells the label list that opened the settings to show itself anew. */
+    private val changes = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> setResult(RESULT_OK) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val pad = (24 * resources.displayMetrics.density).toInt()
+        Settings.registerListener(this, changes)
+        val pad = dp(24)
 
         val layout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -100,7 +109,7 @@ class MainActivity : Activity() {
             textSize = 16f
         }, wrap().apply { topMargin = pad * 3 / 2 })
 
-        for (gesture in Gesture.values()) {
+        for (gesture in Gesture.entries) {
             val button = Button(this).apply {
                 isAllCaps = false
                 setOnClickListener { chooseGestureAction(gesture) }
@@ -115,21 +124,26 @@ class MainActivity : Activity() {
         })
     }
 
+    override fun onDestroy() {
+        Settings.unregisterListener(this, changes)
+        super.onDestroy()
+    }
+
     override fun onResume() {
         super.onResume()
-        openWithButton.text = Settings.openWithName(this)
+        openWithButton.text = Settings.openWithName(this, labelApps)
         rowButtonsButton.text = rowButtonsText()
         inlineButtonsButton.text = inlineButtonsText(Settings.inlineButtons(this))
         sortButton.setText(if (Settings.sortByLastName(this)) R.string.sort_last_name else R.string.sort_first_name)
         for ((gesture, button) in gestureButtons) {
-            button.text = gestureText(gesture, GestureActions.name(this, Settings.gestureAction(this, gesture)))
+            button.text = gestureText(gesture, GestureActions.name(this, Settings.gestureAction(this, gesture), loader))
         }
     }
 
     private fun gestureText(gesture: Gesture, action: CharSequence) = "${getString(gesture.title)}: $action"
 
     private fun chooseGestureAction(gesture: Gesture) {
-        val choices = GestureActions.choices(this)
+        val choices = GestureActions.choices(this, loader)
         val current = choices.indexOfFirst { it.first == Settings.gestureAction(this, gesture) }
         AlertDialog.Builder(this)
             .setTitle(gesture.title)
@@ -143,7 +157,7 @@ class MainActivity : Activity() {
 
     /** "Call, Send SMS, Messengers", or "Only ⋮" when all are hidden. */
     private fun rowButtonsText(): CharSequence {
-        val shown = Settings.RowButton.values().filter { Settings.showButton(this, it) }
+        val shown = Settings.RowButton.entries.filter { Settings.showButton(this, it) }
         return if (shown.isEmpty()) getString(R.string.buttons_more_only)
             else shown.joinToString(", ") { getString(it.title) }
     }
@@ -176,7 +190,7 @@ class MainActivity : Activity() {
     }
 
     private fun chooseRowButtons() {
-        val buttons = Settings.RowButton.values()
+        val buttons = Settings.RowButton.entries
         val checked = buttons.map { Settings.showButton(this, it) }.toBooleanArray()
         AlertDialog.Builder(this)
             .setTitle(R.string.buttons_title)
@@ -194,7 +208,7 @@ class MainActivity : Activity() {
             getString(R.string.open_with_system),
             getString(R.string.label_list_entry),
         )
-        for (app in Settings.labelApps(this)) {
+        for (app in labelApps) {
             values += app.component
             names += Settings.describe(app)
         }
