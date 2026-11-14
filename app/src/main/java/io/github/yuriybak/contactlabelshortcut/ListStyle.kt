@@ -1,0 +1,34 @@
+package io.github.yuriybak.contactlabelshortcut
+
+import android.content.Context
+
+/**
+ * Sizes and visibility of the label list elements, in dp/sp.
+ * Kept in one place so that list styles can later be chosen in the settings.
+ */
+data class ListStyle(
+    val rowPaddingHorizontal: Int = 16,
+    val rowPaddingVertical: Int = 6,
+    val rowMinHeight: Int = 56,
+    val avatarSize: Int = 40,
+    val avatarGap: Int = 16,
+    val nameTextSize: Float = 17f,
+    /** Touch target of an action button. */
+    val actionSize: Int = 44,
+    /** Our own icons (call, SMS, menu). */
+    val actionIconSize: Int = 24,
+    /** Messenger app icons; app icons have built-in padding, so they are drawn larger. */
+    val appIconSize: Int = 32,
+    /** Gap between the name and the buttons when they share a line. */
+    val nameActionsGap: Int = 8,
+    val showAvatars: Boolean = true,
+    val showCall: Boolean = true,
+    val showSms: Boolean = true,
+    val showChats: Boolean = true,
+) {
+    companion object {
+        val DEFAULT = ListStyle()
+    }
+}
+
+fun Context.dp(value: Int): Int = (value * resources.displayMetrics.density + 0.5f).toInt()

@@ -9,8 +9,8 @@ An Android app that puts a home screen shortcut for a contact label: one tap ope
 ## How it works
 
 - When you add the shortcut, the app shows your contact labels (Google Contacts labels and groups of other accounts) and you choose one.
-- The shortcut opens the label in your default contacts app (`ACTION_VIEW` on `content://com.android.contacts/groups/<id>`). Google Contacts supports this.
-- If the contacts app cannot open labels, the app shows the label's contacts itself; a tap opens the contact in any contacts app.
+- The shortcut opens the label where the setting on the app's main screen says: the system choice (default contacts app, `ACTION_VIEW` on `content://com.android.contacts/groups/<id>`; Google Contacts supports this), a specific app, or the app's own list.
+- The app's own list opens almost instantly. Each contact has an avatar and buttons: call (opens the dialer), SMS, and chats in messengers the contact has on this phone (WhatsApp, Telegram, Signal, Viber, Threema). Other actions of other apps are in the ⋮ menu. A tap on the name opens the contact in any contacts app. Long-press call or SMS to choose a number.
 - The shortcut stores the label's server id and title, so it keeps working after the account is resynced and the local id changes.
 - The only permission is reading contacts. The app makes no network requests.
 

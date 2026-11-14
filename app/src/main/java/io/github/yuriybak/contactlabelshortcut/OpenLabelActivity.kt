@@ -2,17 +2,15 @@ package io.github.yuriybak.contactlabelshortcut
 
 import android.app.Activity
 import android.content.ActivityNotFoundException
-import android.content.ContentUris
+import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
-import android.provider.ContactsContract.Groups
 import android.widget.Toast
 
 /**
- * Started by a home screen shortcut. Finds the label's current id and hands the
- * VIEW intent to the system: the default app, or the chooser. Apps are not
- * filtered; [LabelContactsActivity] is one of the handlers and is also used
- * directly if nothing can be started.
+ * Started by a home screen shortcut. Finds the label's current id and opens it
+ * where [Settings.openWith] says: the system choice, our own list or a chosen app.
+ * If nothing can open it, shows the label's contacts in [LabelContactsActivity].
  */
 class OpenLabelActivity : Activity() {
 
@@ -33,23 +31,33 @@ class OpenLabelActivity : Activity() {
             return
         }
 
-        val view = Intent(Intent.ACTION_VIEW)
-            .setDataAndType(ContentUris.withAppendedId(Groups.CONTENT_URI, label.id), Groups.CONTENT_ITEM_TYPE)
+        val builtin = label.putInto(Intent(this, LabelContactsActivity::class.java))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        val view = Settings.groupIntent(label.id).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        try {
-            startActivity(view)
-        } catch (e: ActivityNotFoundException) {
-            startActivity(
-                label.putInto(Intent(this, LabelContactsActivity::class.java))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
-        } catch (e: SecurityException) {
-            startActivity(
-                label.putInto(Intent(this, LabelContactsActivity::class.java))
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
+        when (val openWith = Settings.openWith(this)) {
+            Settings.OPEN_WITH_BUILTIN -> startActivity(builtin)
+            Settings.OPEN_WITH_SYSTEM -> start(view, builtin)
+            else -> {
+                val component = ComponentName.unflattenFromString(openWith)
+                // The chosen app may have been uninstalled: fall back to the system choice
+                if (component == null || !start(Intent(view).setComponent(component), null)) {
+                    start(view, builtin)
+                }
+            }
         }
         finish()
+    }
+
+    /** Starts [intent]; on failure starts [fallback] if given. Returns whether [intent] started. */
+    private fun start(intent: Intent, fallback: Intent?): Boolean {
+        try {
+            startActivity(intent)
+            return true
+        } catch (e: ActivityNotFoundException) {
+        } catch (e: SecurityException) {
+        }
+        fallback?.let { startActivity(it) }
+        return false
     }
 }
