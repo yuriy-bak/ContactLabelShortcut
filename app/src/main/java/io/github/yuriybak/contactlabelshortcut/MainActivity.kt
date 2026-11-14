@@ -41,7 +41,10 @@ class MainActivity : Activity() {
             textSize = 16f
         }, wrap().apply { topMargin = pad * 3 / 2 })
 
-        openWithButton = Button(this).apply { setOnClickListener { chooseOpenWith() } }
+        openWithButton = Button(this).apply {
+            isAllCaps = false
+            setOnClickListener { chooseOpenWith() }
+        }
         layout.addView(openWithButton, wrap())
 
         setContentView(ScrollView(this).apply {
@@ -61,9 +64,9 @@ class MainActivity : Activity() {
             getString(R.string.open_with_system),
             getString(R.string.label_list_entry),
         )
-        for ((component, name) in Settings.labelApps(this)) {
-            values += component
-            names += name
+        for (app in Settings.labelApps(this)) {
+            values += app.component
+            names += Settings.describe(app)
         }
         val current = values.indexOf(Settings.openWith(this)).coerceAtLeast(0)
 

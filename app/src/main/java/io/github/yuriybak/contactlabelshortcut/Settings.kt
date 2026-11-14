@@ -4,6 +4,10 @@ import android.content.ComponentName
 import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.RelativeSizeSpan
 import android.provider.ContactsContract.Groups
 
 /** User settings, kept in SharedPreferences. */
@@ -30,23 +34,43 @@ object Settings {
         Intent(Intent.ACTION_VIEW)
             .setDataAndType(ContentUris.withAppendedId(Groups.CONTENT_URI, groupId), Groups.CONTENT_ITEM_TYPE)
 
-    /** Other apps that accept the label intent: component (flattened) to app name. */
-    fun labelApps(context: Context): List<Pair<String, CharSequence>> {
+    /** An app that can open labels. */
+    class LabelApp(val component: String, val name: CharSequence, val packageName: String)
+
+    /**
+     * Other apps that open labels. Only apps that name the label type explicitly:
+     * viewers that accept any type (* / *, vnd.android.cursor.item / *) are left out.
+     */
+    fun labelApps(context: Context): List<LabelApp> {
         val pm = context.packageManager
-        return pm.queryIntentActivities(groupIntent(1), 0)
+        return pm.queryIntentActivities(groupIntent(1), PackageManager.GET_RESOLVED_FILTER)
             .filter { it.activityInfo.packageName != context.packageName }
+            .filter { info ->
+                val filter = info.filter ?: return@filter true
+                (0 until filter.countDataTypes()).any { filter.getDataType(it) == Groups.CONTENT_ITEM_TYPE }
+            }
             .map {
                 val component = ComponentName(it.activityInfo.packageName, it.activityInfo.name)
-                component.flattenToString() to it.loadLabel(pm)
+                LabelApp(component.flattenToString(), it.loadLabel(pm), it.activityInfo.packageName)
             }
-            .sortedBy { it.second.toString().lowercase() }
+            .distinctBy { it.component }
+            .sortedBy { it.name.toString().lowercase() }
+    }
+
+    /** "Contacts" with the package name on a second, smaller line. */
+    fun describe(app: LabelApp): CharSequence {
+        val text = SpannableStringBuilder(app.name).append('\n')
+        val start = text.length
+        text.append(app.packageName)
+        text.setSpan(RelativeSizeSpan(0.75f), start, text.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        return text
     }
 
     /** Human readable name of the current [openWith] value. */
     fun openWithName(context: Context): CharSequence = when (val value = openWith(context)) {
         OPEN_WITH_SYSTEM -> context.getString(R.string.open_with_system)
         OPEN_WITH_BUILTIN -> context.getString(R.string.label_list_entry)
-        else -> labelApps(context).firstOrNull { it.first == value }?.second
+        else -> labelApps(context).firstOrNull { it.component == value }?.let(::describe)
             ?: context.getString(R.string.open_with_system)
     }
 
