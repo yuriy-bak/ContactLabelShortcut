@@ -62,10 +62,6 @@ class OpenLabelActivity : Activity() {
         val pm = packageManager
         val handlers = pm.queryIntentActivities(view, PackageManager.MATCH_DEFAULT_ONLY)
             .map { it.activityInfo }
-        // TEST BUILD ONLY: always open the patched Fossify debug build when it is installed.
-        handlers.firstOrNull { it.packageName == "org.fossify.contacts.debug" }?.let {
-            return Intent(view).setComponent(ComponentName(it.packageName, it.name))
-        }
         val good = handlers.filter { it.packageName !in BROKEN_PACKAGES }
         if (good.isEmpty()) return null
 
@@ -95,7 +91,11 @@ class OpenLabelActivity : Activity() {
     }
 
     companion object {
-        /** Contacts apps that accept the group intent but treat the group id as a contact id. */
+        /**
+         * Contacts apps that accept the group intent but treat the group id as a contact id.
+         * The Fossify debug build (org.fossify.contacts.debug) is left out on purpose: it is
+         * used to test the Fossify fix, so it stays in the list.
+         */
         private val BROKEN_PACKAGES = setOf(
             "org.fossify.contacts",
             "com.simplemobiletools.contacts.pro",
