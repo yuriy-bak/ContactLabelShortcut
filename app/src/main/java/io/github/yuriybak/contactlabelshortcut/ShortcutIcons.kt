@@ -8,7 +8,11 @@ import android.graphics.Paint
 import android.graphics.drawable.Icon
 import android.icu.text.BreakIterator
 
-/** What a label shortcut's icon shows: a letter or an emoji on a colored background. */
+/**
+ * What a label shortcut's icon shows: a letter or an emoji on a colored background,
+ * or on none ([TRANSPARENT]): then the text is drawn larger, and a letter gets a shadow
+ * to stay readable on any wallpaper.
+ */
 data class ShortcutIcon(val text: String, val color: Int) {
 
     /** An adaptive icon: the launcher masks it into its own shape. */
@@ -20,15 +24,18 @@ data class ShortcutIcon(val text: String, val color: Int) {
         val size = (108 * density).toInt()
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
-        canvas.drawColor(color)
+        val transparent = color == TRANSPARENT
+        if (!transparent) canvas.drawColor(color)
 
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            this.color = if (isLight(color)) 0xDE000000.toInt() else Color.WHITE
+            this.color = if (!transparent && isLight(color)) 0xDE000000.toInt() else Color.WHITE
             textAlign = Paint.Align.CENTER
-            textSize = 40 * density
+            textSize = (if (transparent) 56 else 40) * density
+            if (transparent) setShadowLayer(3 * density, 0f, density, 0x99000000.toInt())
         }
-        // Keep the text inside the safe zone (a 66dp circle) whatever its length
-        val maxWidth = 50 * density
+        // Keep the text inside the safe zone (a 66dp circle) whatever its length;
+        // without a background nothing frames it, so it may fill more of the visible 72dp
+        val maxWidth = (if (transparent) 62 else 50) * density
         val width = paint.measureText(text)
         if (width > maxWidth) paint.textSize *= maxWidth / width
 
@@ -55,6 +62,12 @@ data class ShortcutIcon(val text: String, val color: Int) {
             0xFF795548.toInt(), // brown
             0xFF5F6368.toInt(), // grey
         )
+
+        /** No background: only the letter or emoji. */
+        const val TRANSPARENT = 0
+
+        /** The choices in the editor: the colors, then no background. */
+        val PALETTE = COLORS + TRANSPARENT
 
         /** The first letter of the title on a color picked from the title. */
         fun default(title: String): ShortcutIcon {

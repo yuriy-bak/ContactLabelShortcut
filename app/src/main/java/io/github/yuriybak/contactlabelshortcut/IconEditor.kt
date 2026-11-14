@@ -82,18 +82,26 @@ object IconEditor {
         val ring = activity.obtainStyledAttributes(intArrayOf(android.R.attr.textColorPrimary)).run {
             getColor(0, 0xFF202124.toInt()).also { recycle() }
         }
+        val outline = activity.obtainStyledAttributes(intArrayOf(android.R.attr.textColorSecondary)).run {
+            getColor(0, 0xFF5F6368.toInt()).also { recycle() }
+        }
         val swatches = ArrayList<View>()
         fun paintSwatches() {
-            ShortcutIcon.COLORS.forEachIndexed { i, c ->
+            ShortcutIcon.PALETTE.forEachIndexed { i, c ->
                 swatches[i].background = GradientDrawable().apply {
                     shape = GradientDrawable.OVAL
                     setColor(c)
-                    if (c == color) setStroke(dp(3), ring)
+                    when {
+                        c == color -> setStroke(dp(3), ring)
+                        // "No background" is an empty dashed circle
+                        c == ShortcutIcon.TRANSPARENT -> setStroke(dp(2), outline, dp(4).toFloat(), dp(3).toFloat())
+                    }
                 }
+                if (c == ShortcutIcon.TRANSPARENT) swatches[i].contentDescription = activity.getString(R.string.icon_no_background)
             }
         }
         val grid = GridLayout(activity).apply { columnCount = 6 }
-        for (c in ShortcutIcon.COLORS) {
+        for (c in ShortcutIcon.PALETTE) {
             val swatch = View(activity).apply {
                 setOnClickListener {
                     color = c
