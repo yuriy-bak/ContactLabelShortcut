@@ -54,6 +54,7 @@ class LabelContactsActivity : Activity() {
     private lateinit var iconTint: ColorStateList
     private lateinit var adapter: Adapter
     private var query = ""
+    private var detailsLoaded = false
 
     /** Read on the first gesture, not when the list opens. */
     private val gestureActions: Map<Gesture, String> by lazy(LazyThreadSafetyMode.NONE) {
@@ -117,6 +118,7 @@ class LabelContactsActivity : Activity() {
             runOnUiThread {
                 if (isDestroyed) return@runOnUiThread
                 for (item in items) item.details = details[item.contactId] ?: ContactDetails.EMPTY
+                detailsLoaded = true
                 // A number typed before the phones were loaded can match now
                 if (query.isNotEmpty()) adapter.filter(query) else adapter.notifyDataSetChanged()
             }
@@ -205,6 +207,7 @@ class LabelContactsActivity : Activity() {
 
     private fun bind(row: ContactRow, item: Item) {
         row.resetSwipe()
+        row.buttonsKnown = detailsLoaded
         row.nameText = item.name
         if (style.showAvatars) avatars.bind(row.avatar, item.name, item.photoUri)
         row.setOnClickListener { openContact(item) }
@@ -227,8 +230,8 @@ class LabelContactsActivity : Activity() {
                     onLongClick = { withPhone(item, true) { sms(it) } }))
             }
         }
-        if (style.showChats) {
-            for (messenger in details.messengers) {
+        for (messenger in details.messengers) {
+            if (style.showsChat(messenger.chat.mimeType)) {
                 val chat = messenger.chat
                 actions.addView(appButton(chat.handler.icon, chat.title(),
                     onClick = { launch(chat.intent()) },

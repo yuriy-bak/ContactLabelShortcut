@@ -52,6 +52,12 @@ Choose below where labels open: a contacts app or \"Contact Label Shortcut list\
     <string name="no_pinned_shortcuts">No label shortcuts on the home screen yet</string>
     <string name="icon_update_failed">The launcher did not accept the new icon</string>
     <string name="buttons_title">Buttons in a row</string>
-    <string name="buttons_messengers">Messengers</string>
     <string name="buttons_more_only">Only ⋮ (all actions in the menu)</string>
+    <string name="buttons_whatsapp" translatable="false">WhatsApp</string>
+    <string name="buttons_telegram" translatable="false">Telegram</string>
+    <string name="buttons_signal" translatable="false">Signal</string>
+    <string name="buttons_other_messengers">Other messengers</string>
+    <string name="inline_buttons_title">Buttons on the name line</string>
+    <string name="inline_buttons_never">Buttons always on the second line</string>
+    <string name="inline_buttons_up_to">Up to %1$d buttons on the name line</string>
 </resources>

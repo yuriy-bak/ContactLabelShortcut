@@ -51,6 +51,9 @@
     <string name="no_pinned_shortcuts">На рабочем столе пока нет ярлыков меток</string>
     <string name="icon_update_failed">Лаунчер не принял новый значок</string>
     <string name="buttons_title">Кнопки в строке</string>
-    <string name="buttons_messengers">Мессенджеры</string>
     <string name="buttons_more_only">Только ⋮ (все действия в меню)</string>
+    <string name="buttons_other_messengers">Другие мессенджеры</string>
+    <string name="inline_buttons_title">Кнопки в строке с именем</string>
+    <string name="inline_buttons_never">Кнопки всегда на второй строке</string>
+    <string name="inline_buttons_up_to">В строке с именем, если кнопок не больше %1$d</string>
 </resources>

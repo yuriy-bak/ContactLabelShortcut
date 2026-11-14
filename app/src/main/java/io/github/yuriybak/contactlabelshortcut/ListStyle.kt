@@ -22,13 +22,29 @@ data class ListStyle(
     val showAvatars: Boolean = true,
     val showCall: Boolean = true,
     val showSms: Boolean = true,
-    val showChats: Boolean = true,
+    val showWhatsApp: Boolean = true,
+    val showTelegram: Boolean = true,
+    val showSignal: Boolean = true,
+    /** Viber, Threema and other known messengers. */
+    val showOtherChats: Boolean = true,
+    /** A row with at most this many buttons (with "more") is one line; 0: buttons always on the second line. */
+    val inlineButtons: Int = 0,
 ) {
+    private val shown get() = listOf(showCall, showSms, showWhatsApp, showTelegram, showSignal, showOtherChats)
+
     /** Some buttons are hidden: the "more" button then opens the menu of all actions. */
-    val hidesActions: Boolean get() = !showCall || !showSms || !showChats
+    val hidesActions: Boolean get() = !shown.all { it }
 
     /** No buttons but "more": it goes on the name line, rows are one line high. */
-    val moreOnly: Boolean get() = !showCall && !showSms && !showChats
+    val moreOnly: Boolean get() = shown.none { it }
+
+    /** Whether the button of the messenger with this chat MIME type is shown. */
+    fun showsChat(mimeType: String): Boolean = when {
+        "whatsapp" in mimeType -> showWhatsApp
+        "telegram" in mimeType -> showTelegram
+        "thoughtcrime.securesms" in mimeType -> showSignal
+        else -> showOtherChats
+    }
 
     companion object {
         val DEFAULT = ListStyle()

@@ -86,7 +86,19 @@ object Settings {
     enum class RowButton(val key: String, val title: Int) {
         CALL("show_call", R.string.action_call),
         SMS("show_sms", R.string.action_sms),
-        CHATS("show_chats", R.string.buttons_messengers),
+        WHATSAPP("show_whatsapp", R.string.buttons_whatsapp),
+        TELEGRAM("show_telegram", R.string.buttons_telegram),
+        SIGNAL("show_signal", R.string.buttons_signal),
+        OTHER_CHATS("show_other_chats", R.string.buttons_other_messengers),
+    }
+
+    private const val KEY_INLINE_BUTTONS = "inline_buttons"
+
+    /** See [ListStyle.inlineButtons]. */
+    fun inlineButtons(context: Context): Int = prefs(context).getInt(KEY_INLINE_BUTTONS, 0)
+
+    fun setInlineButtons(context: Context, value: Int) {
+        prefs(context).edit().putInt(KEY_INLINE_BUTTONS, value).apply()
     }
 
     fun showButton(context: Context, button: RowButton): Boolean = prefs(context).getBoolean(button.key, true)
@@ -100,7 +112,11 @@ object Settings {
         return ListStyle.DEFAULT.copy(
             showCall = prefs.getBoolean(RowButton.CALL.key, true),
             showSms = prefs.getBoolean(RowButton.SMS.key, true),
-            showChats = prefs.getBoolean(RowButton.CHATS.key, true),
+            showWhatsApp = prefs.getBoolean(RowButton.WHATSAPP.key, true),
+            showTelegram = prefs.getBoolean(RowButton.TELEGRAM.key, true),
+            showSignal = prefs.getBoolean(RowButton.SIGNAL.key, true),
+            showOtherChats = prefs.getBoolean(RowButton.OTHER_CHATS.key, true),
+            inlineButtons = prefs.getInt(KEY_INLINE_BUTTONS, 0),
         )
     }
 

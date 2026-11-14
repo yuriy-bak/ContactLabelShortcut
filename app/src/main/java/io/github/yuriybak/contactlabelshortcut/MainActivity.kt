@@ -18,6 +18,7 @@ class MainActivity : Activity() {
     private lateinit var openWithButton: Button
     private val gestureButtons = HashMap<Gesture, Button>()
     private lateinit var rowButtonsButton: Button
+    private lateinit var inlineButtonsButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,6 +69,12 @@ class MainActivity : Activity() {
         }
         layout.addView(rowButtonsButton, wrap())
 
+        inlineButtonsButton = Button(this).apply {
+            isAllCaps = false
+            setOnClickListener { chooseInlineButtons() }
+        }
+        layout.addView(inlineButtonsButton, wrap())
+
         layout.addView(TextView(this).apply {
             setText(R.string.gestures_title)
             textSize = 16f
@@ -92,6 +99,7 @@ class MainActivity : Activity() {
         super.onResume()
         openWithButton.text = Settings.openWithName(this)
         rowButtonsButton.text = rowButtonsText()
+        inlineButtonsButton.text = inlineButtonsText(Settings.inlineButtons(this))
         for ((gesture, button) in gestureButtons) {
             button.text = gestureText(gesture, GestureActions.name(this, Settings.gestureAction(this, gesture)))
         }
@@ -117,6 +125,21 @@ class MainActivity : Activity() {
         val shown = Settings.RowButton.values().filter { Settings.showButton(this, it) }
         return if (shown.isEmpty()) getString(R.string.buttons_more_only)
             else shown.joinToString(", ") { getString(it.title) }
+    }
+
+    private fun inlineButtonsText(count: Int): String =
+        if (count == 0) getString(R.string.inline_buttons_never) else getString(R.string.inline_buttons_up_to, count)
+
+    private fun chooseInlineButtons() {
+        val values = (0..MAX_INLINE_BUTTONS).toList()
+        AlertDialog.Builder(this)
+            .setTitle(R.string.inline_buttons_title)
+            .setSingleChoiceItems(values.map { inlineButtonsText(it) }.toTypedArray(), Settings.inlineButtons(this)) { dialog, which ->
+                Settings.setInlineButtons(this, values[which])
+                inlineButtonsButton.text = inlineButtonsText(values[which])
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun chooseRowButtons() {
@@ -185,4 +208,8 @@ class MainActivity : Activity() {
         LinearLayout.LayoutParams.WRAP_CONTENT,
         LinearLayout.LayoutParams.WRAP_CONTENT,
     )
+
+    private companion object {
+        const val MAX_INLINE_BUTTONS = 5
+    }
 }

@@ -29,7 +29,9 @@ class SwipeTarget(val icon: Drawable?, val iconSize: Int, val color: Int, val ru
  * - the button line is reserved even before the buttons are loaded, so rows do not jump;
  * - the name is never cut: what does not fit on the first line goes on the second line,
  *   before the buttons, and if it does not fit there either, the row grows.
- * With [ListStyle.moreOnly] there is no button line: the "more" button is on the name line.
+ * A row with few buttons (at most [ListStyle.inlineButtons], or only "more" with
+ * [ListStyle.moreOnly]) is one line: the name and the buttons beside it. This depends only on
+ * the number of buttons, never on the length of the name.
  *
  * A horizontal swipe moves the row and shows [SwipeTarget] under it; touch handling costs
  * nothing until a finger moves sideways.
@@ -76,6 +78,16 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
     /** Narrower than this, the rest of the name gets lines of its own above the buttons. */
     private val minRestWidth = context.dp(64)
     private var restBeside = true
+    private var inline = false
+
+    /** The buttons of this contact are loaded; until then the button line is kept. */
+    var buttonsKnown = false
+        set(value) {
+            if (field != value) {
+                field = value
+                requestLayout()
+            }
+        }
     private val minRowHeight = context.dp(style.rowMinHeight)
 
     /** Asked when a swipe starts (to the right if true); null means this row does not swipe that way. */
@@ -125,12 +137,15 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
         actions.measure(unspecified, unspecified)
         trailing.measure(unspecified, unspecified)
 
-        if (style.moreOnly) {
-            // One line: the name (wrapping if it must) and the "more" button, whose place is kept
+        val buttons = actions.childCount + trailing.childCount
+        inline = style.moreOnly || (buttonsKnown && style.inlineButtons > 0 && buttons <= style.inlineButtons)
+        if (inline) {
+            // One line: the name (wrapping if it must) and the buttons; the place of "more" is kept
             if (name.text.toString() != nameText.toString()) name.text = nameText
             nameRest.text = ""
             splitWidth = -1
-            val nameWidth = max(textAvailable - actionLine - restGap, 0)
+            val buttonsWidth = actions.measuredWidth + max(trailing.measuredWidth, if (style.moreOnly) actionLine else 0)
+            val nameWidth = max(textAvailable - buttonsWidth - restGap, 0)
             name.measure(MeasureSpec.makeMeasureSpec(nameWidth, MeasureSpec.AT_MOST), unspecified)
             nameRest.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY))
             val content = maxOf(avatarHeight, name.measuredHeight, actionLine)
@@ -290,7 +305,7 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
             textStart += avatarSize + avatarGap
         }
 
-        if (style.moreOnly) {
+        if (inline) {
             place(name, textStart, centerY - name.measuredHeight / 2)
             place(nameRest, textStart, centerY)
             val trailingStart = width - endPad - trailing.measuredWidth
