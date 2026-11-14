@@ -93,6 +93,20 @@ object Settings {
     }
 
     private const val KEY_INLINE_BUTTONS = "inline_buttons"
+    private const val KEY_SORT_BY_LAST_NAME = "sort_by_last_name"
+    private const val KEY_STARRED_FIRST = "starred_first"
+
+    fun sortByLastName(context: Context): Boolean = prefs(context).getBoolean(KEY_SORT_BY_LAST_NAME, false)
+
+    fun setSortByLastName(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_SORT_BY_LAST_NAME, value).apply()
+    }
+
+    fun starredFirst(context: Context): Boolean = prefs(context).getBoolean(KEY_STARRED_FIRST, false)
+
+    fun setStarredFirst(context: Context, value: Boolean) {
+        prefs(context).edit().putBoolean(KEY_STARRED_FIRST, value).apply()
+    }
 
     /** See [ListStyle.inlineButtons]. */
     fun inlineButtons(context: Context): Int = prefs(context).getInt(KEY_INLINE_BUTTONS, 0)
@@ -117,6 +131,8 @@ object Settings {
             showSignal = prefs.getBoolean(RowButton.SIGNAL.key, true),
             showOtherChats = prefs.getBoolean(RowButton.OTHER_CHATS.key, true),
             inlineButtons = prefs.getInt(KEY_INLINE_BUTTONS, 0),
+            sortByLastName = prefs.getBoolean(KEY_SORT_BY_LAST_NAME, false),
+            starredFirst = prefs.getBoolean(KEY_STARRED_FIRST, false),
         )
     }
 

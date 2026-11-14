@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.Switch
 import android.widget.TextView
 import android.widget.Toast
 
@@ -19,6 +20,7 @@ class MainActivity : Activity() {
     private val gestureButtons = HashMap<Gesture, Button>()
     private lateinit var rowButtonsButton: Button
     private lateinit var inlineButtonsButton: Button
+    private lateinit var sortButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +59,24 @@ class MainActivity : Activity() {
             setOnClickListener { chooseOpenWith() }
         }
         layout.addView(openWithButton, wrap())
+
+        layout.addView(TextView(this).apply {
+            setText(R.string.sort_title)
+            textSize = 16f
+        }, wrap().apply { topMargin = pad * 3 / 2 })
+
+        sortButton = Button(this).apply {
+            isAllCaps = false
+            setOnClickListener { chooseSort() }
+        }
+        layout.addView(sortButton, wrap())
+
+        layout.addView(Switch(this).apply {
+            setText(R.string.starred_first)
+            textSize = 16f
+            isChecked = Settings.starredFirst(this@MainActivity)
+            setOnCheckedChangeListener { _, checked -> Settings.setStarredFirst(this@MainActivity, checked) }
+        }, LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT).apply { topMargin = pad / 3 })
 
         layout.addView(TextView(this).apply {
             setText(R.string.buttons_title)
@@ -100,6 +120,7 @@ class MainActivity : Activity() {
         openWithButton.text = Settings.openWithName(this)
         rowButtonsButton.text = rowButtonsText()
         inlineButtonsButton.text = inlineButtonsText(Settings.inlineButtons(this))
+        sortButton.setText(if (Settings.sortByLastName(this)) R.string.sort_last_name else R.string.sort_first_name)
         for ((gesture, button) in gestureButtons) {
             button.text = gestureText(gesture, GestureActions.name(this, Settings.gestureAction(this, gesture)))
         }
@@ -125,6 +146,18 @@ class MainActivity : Activity() {
         val shown = Settings.RowButton.values().filter { Settings.showButton(this, it) }
         return if (shown.isEmpty()) getString(R.string.buttons_more_only)
             else shown.joinToString(", ") { getString(it.title) }
+    }
+
+    private fun chooseSort() {
+        val names = arrayOf(getString(R.string.sort_first_name), getString(R.string.sort_last_name))
+        AlertDialog.Builder(this)
+            .setTitle(R.string.sort_title)
+            .setSingleChoiceItems(names, if (Settings.sortByLastName(this)) 1 else 0) { dialog, which ->
+                Settings.setSortByLastName(this, which == 1)
+                sortButton.text = names[which]
+                dialog.dismiss()
+            }
+            .show()
     }
 
     private fun inlineButtonsText(count: Int): String =

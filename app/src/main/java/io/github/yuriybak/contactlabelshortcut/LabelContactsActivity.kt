@@ -79,8 +79,8 @@ class LabelContactsActivity : Activity() {
             setHomeActionContentDescription(R.string.action_settings)
         }
 
-        val items = if (groupId >= 0 && permitted) load(groupId) else emptyList()
         style = Settings.listStyle(this)
+        val items = if (groupId >= 0 && permitted) load(groupId) else emptyList()
 
         if (items.isEmpty()) {
             setContentView(TextView(this).apply {
@@ -547,7 +547,13 @@ class LabelContactsActivity : Activity() {
             ),
             "${ContactsContract.Data.MIMETYPE}=? AND ${GroupMembership.GROUP_ROW_ID}=?",
             arrayOf(GroupMembership.CONTENT_ITEM_TYPE, groupId.toString()),
-            "${ContactsContract.Data.DISPLAY_NAME_PRIMARY} COLLATE LOCALIZED ASC",
+            listOfNotNull(
+                if (style.starredFirst) "${ContactsContract.Data.STARRED} DESC" else null,
+                // Sort keys follow the name order: "first last" or "last, first"
+                (if (style.sortByLastName) ContactsContract.Data.SORT_KEY_ALTERNATIVE else ContactsContract.Data.SORT_KEY_PRIMARY) +
+                    " COLLATE LOCALIZED ASC",
+                "${ContactsContract.Data.DISPLAY_NAME_PRIMARY} COLLATE LOCALIZED ASC",
+            ).joinToString(", "),
         )?.use { c ->
             while (c.moveToNext()) {
                 val id = c.getLong(0)
