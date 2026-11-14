@@ -200,6 +200,7 @@ class LabelContactsActivity : Activity() {
 
         val actions = row.actions
         actions.removeAllViews()
+        row.trailing.removeAllViews()
         val details = item.details
         if (details.phones.isNotEmpty()) {
             if (style.showCall) {
@@ -219,7 +220,7 @@ class LabelContactsActivity : Activity() {
             }
         }
         if (details.other.isNotEmpty()) {
-            actions.addView(button(R.drawable.ic_more, R.string.action_more,
+            row.trailing.addView(button(R.drawable.ic_more, R.string.action_more,
                 onClick = { showMore(it, details.other) }, onLongClick = null))
         }
     }

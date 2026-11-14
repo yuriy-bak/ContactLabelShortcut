@@ -8,8 +8,8 @@ import android.content.Context
  */
 data class ListStyle(
     val rowPaddingHorizontal: Int = 16,
-    val rowPaddingVertical: Int = 6,
-    val rowMinHeight: Int = 56,
+    val rowPaddingVertical: Int = 4,
+    val rowMinHeight: Int = 64,
     val avatarSize: Int = 40,
     val avatarGap: Int = 16,
     val nameTextSize: Float = 17f,
@@ -19,8 +19,6 @@ data class ListStyle(
     val actionIconSize: Int = 24,
     /** Messenger app icons; app icons have built-in padding, so they are drawn larger. */
     val appIconSize: Int = 32,
-    /** Gap between the name and the buttons when they share a line. */
-    val nameActionsGap: Int = 8,
     val showAvatars: Boolean = true,
     val showCall: Boolean = true,
     val showSms: Boolean = true,

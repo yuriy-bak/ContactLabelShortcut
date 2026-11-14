@@ -9,14 +9,15 @@ import android.view.ViewOutlineProvider
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import kotlin.math.ceil
 import kotlin.math.max
 
 /**
- * One contact in the label list: avatar, name and action buttons.
- *
- * The name is never cut: if the name and the buttons do not fit on one line,
- * the buttons move to a line of their own under the name, aligned to the end.
+ * One contact in the label list: avatar, then the name with the action buttons on a line
+ * under it. Every row has the same shape, whatever the length of the name:
+ * - the name is never cut (a very long one wraps);
+ * - the buttons start under the name, so call and SMS line up in one column through the list;
+ * - the "more" button is always at the end of the button line;
+ * - the button line is reserved even before the buttons are loaded, so rows do not jump.
  */
 class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(context) {
 
@@ -38,13 +39,18 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
         attrs.recycle()
     }
 
+    /** Call, SMS and messenger buttons, from the start of the line. */
     val actions = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
+
+    /** The "more" button, at the end of the line. */
+    val trailing = LinearLayout(context).apply { orientation = LinearLayout.HORIZONTAL }
 
     private val avatarSize = context.dp(style.avatarSize)
     private val avatarGap = context.dp(style.avatarGap)
-    private val nameActionsGap = context.dp(style.nameActionsGap)
+    private val actionLine = context.dp(style.actionSize)
+    /** Buttons have padding around the icon; shifting them by it puts the first icon under the name. */
+    private val actionsShift = (actionLine - context.dp(style.actionIconSize)) / 2
     private val minRowHeight = context.dp(style.rowMinHeight)
-    private var actionsInline = true
 
     init {
         val h = context.dp(style.rowPaddingHorizontal)
@@ -53,6 +59,7 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
         addView(avatar)
         addView(name)
         addView(actions)
+        addView(trailing)
         val attrs = context.obtainStyledAttributes(intArrayOf(android.R.attr.selectableItemBackground))
         background = attrs.getDrawable(0)
         attrs.recycle()
@@ -72,35 +79,11 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
         }
         textAvailable = max(textAvailable, 0)
 
-        val hasActions = actions.childCount > 0
-        val actionsWidth: Int
-        val actionsHeight: Int
-        if (hasActions) {
-            actions.measure(unspecified, unspecified)
-            actionsWidth = actions.measuredWidth
-            actionsHeight = actions.measuredHeight
-        } else {
-            actions.measure(
-                MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY),
-                MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY),
-            )
-            actionsWidth = 0
-            actionsHeight = 0
-        }
+        name.measure(MeasureSpec.makeMeasureSpec(textAvailable, MeasureSpec.AT_MOST), unspecified)
+        actions.measure(unspecified, unspecified)
+        trailing.measure(unspecified, unspecified)
 
-        val nameWidth = ceil(name.paint.measureText(name.text.toString())).toInt() +
-            name.paddingLeft + name.paddingRight
-        val inlineRoom = textAvailable - (if (hasActions) actionsWidth + nameActionsGap else 0)
-        actionsInline = !hasActions || nameWidth <= inlineRoom
-
-        val nameRoom = if (actionsInline) max(inlineRoom, 0) else textAvailable
-        name.measure(MeasureSpec.makeMeasureSpec(nameRoom, MeasureSpec.AT_MOST), unspecified)
-
-        val content = if (actionsInline) {
-            maxOf(avatarHeight, name.measuredHeight, actionsHeight)
-        } else {
-            max(avatarHeight, name.measuredHeight + actionsHeight)
-        }
+        val content = max(avatarHeight, name.measuredHeight + actionLine)
         setMeasuredDimension(width, max(content + paddingTop + paddingBottom, minRowHeight))
     }
 
@@ -123,15 +106,11 @@ class ContactRow(context: Context, private val style: ListStyle) : ViewGroup(con
             place(avatar, startPad, centerY - avatarSize / 2)
             textStart += avatarSize + avatarGap
         }
-        val actionsStart = width - endPad - actions.measuredWidth
 
-        if (actionsInline) {
-            place(name, textStart, centerY - name.measuredHeight / 2)
-            place(actions, actionsStart, centerY - actions.measuredHeight / 2)
-        } else {
-            val top = centerY - (name.measuredHeight + actions.measuredHeight) / 2
-            place(name, textStart, top)
-            place(actions, actionsStart, top + name.measuredHeight)
-        }
+        val top = centerY - (name.measuredHeight + actionLine) / 2
+        place(name, textStart, top)
+        val lineTop = top + name.measuredHeight
+        place(actions, textStart - actionsShift, lineTop + (actionLine - actions.measuredHeight) / 2)
+        place(trailing, width - endPad - trailing.measuredWidth, lineTop + (actionLine - trailing.measuredHeight) / 2)
     }
 }
