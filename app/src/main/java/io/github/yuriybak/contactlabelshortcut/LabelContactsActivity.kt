@@ -273,7 +273,7 @@ class LabelContactsActivity : Activity() {
                 onClick = { showAllActions(item) }, onLongClick = null))
         } else if (details.other.isNotEmpty()) {
             row.trailing.addView(button(R.drawable.ic_more, R.string.action_more,
-                onClick = { showMore(it, details.other) }, onLongClick = null))
+                onClick = { showMore(item, details.other) }, onLongClick = null))
         }
     }
 
@@ -371,24 +371,64 @@ class LabelContactsActivity : Activity() {
 
     /** Everything that can be done with the contact, in one list. */
     private fun showAllActions(item: Item) {
-        val titles = mutableListOf<CharSequence>()
-        val actions = mutableListOf<() -> Unit>()
-        fun add(title: CharSequence, action: () -> Unit) {
-            titles += title
-            actions += action
-        }
+        val entries = mutableListOf<MenuEntry>()
+        val own = dp(style.actionIconSize)
+        val app = dp(style.appIconSize)
+        fun ownIcon(res: Int) = getDrawable(res)?.mutate()?.apply { setTintList(iconTint) }
         val details = item.details
-        for (phone in details.phones) add(getString(R.string.menu_call, "${phone.label}: ${phone.number}")) { dial(phone.number) }
-        for (phone in details.phones) add(getString(R.string.menu_sms, "${phone.label}: ${phone.number}")) { sms(phone.number) }
-        for (messenger in details.messengers) for (action in messenger.all) add(action.title()) { launch(action.intent()) }
-        for (action in details.other) add(action.title()) { launch(action.intent()) }
-        if (details.phones.isNotEmpty()) add(getString(R.string.ga_copy)) { withPhone(item, false) { copyNumber(item, it) } }
-        add(getString(R.string.ga_open)) { openContact(item) }
-        add(getString(R.string.ga_edit)) { editContact(item) }
-        add(getString(R.string.ga_share)) { shareContact(item) }
+        for (phone in details.phones) {
+            entries += MenuEntry(ownIcon(R.drawable.ic_call), own, "${phone.label}: ${phone.number}") { dial(phone.number) }
+        }
+        for (phone in details.phones) {
+            entries += MenuEntry(ownIcon(R.drawable.ic_sms), own, "${phone.label}: ${phone.number}") { sms(phone.number) }
+        }
+        for (action in details.messengers.flatMap { it.all } + details.other) {
+            entries += MenuEntry(copy(action.handler.icon), app, action.shortTitle()) { launch(action.intent()) }
+        }
+        if (details.phones.isNotEmpty()) {
+            entries += MenuEntry(ownIcon(R.drawable.ic_copy), own, getString(R.string.ga_copy)) { withPhone(item, false) { copyNumber(item, it) } }
+        }
+        entries += MenuEntry(ownIcon(R.drawable.ic_person), own, getString(R.string.ga_open)) { openContact(item) }
+        entries += MenuEntry(ownIcon(R.drawable.ic_edit), own, getString(R.string.ga_edit)) { editContact(item) }
+        entries += MenuEntry(ownIcon(R.drawable.ic_share), own, getString(R.string.ga_share)) { shareContact(item) }
+        showMenu(item.name, entries)
+    }
+
+    /** A line of an action menu: an icon (our own or an app's) and a text. */
+    private class MenuEntry(val icon: Drawable?, val iconSize: Int, val text: CharSequence, val run: () -> Unit)
+
+    /** A dialog with icons, so that apps are recognised by their icons rather than by names. */
+    private fun showMenu(title: CharSequence, entries: List<MenuEntry>) {
+        val pad = dp(24)
+        val adapter = object : BaseAdapter() {
+            override fun getCount() = entries.size
+            override fun getItem(position: Int) = entries[position]
+            override fun getItemId(position: Int) = position.toLong()
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = convertView as? TextView ?: TextView(this@LabelContactsActivity).apply {
+                    textSize = 16f
+                    gravity = Gravity.CENTER_VERTICAL
+                    minHeight = dp(52)
+                    setPaddingRelative(pad, 0, pad, 0)
+                    val attrs = obtainStyledAttributes(intArrayOf(android.R.attr.textColorPrimary))
+                    setTextColor(attrs.getColorStateList(0))
+                    attrs.recycle()
+                }
+                val entry = entries[position]
+                // App icons have built-in padding: a larger box with the same start keeps the text aligned
+                val icon = entry.icon?.apply {
+                    val inset = (dp(style.appIconSize) - entry.iconSize) / 2
+                    setBounds(inset, 0, inset + entry.iconSize, entry.iconSize)
+                }
+                view.setCompoundDrawablesRelative(icon, null, null, null)
+                view.compoundDrawablePadding = dp(20) + (dp(style.appIconSize) - entry.iconSize)
+                view.text = entry.text
+                return view
+            }
+        }
         AlertDialog.Builder(this)
-            .setTitle(item.name)
-            .setItems(titles.toTypedArray()) { _, which -> actions[which]() }
+            .setTitle(title)
+            .setAdapter(adapter) { _, which -> entries[which].run() }
             .show()
     }
 
@@ -446,11 +486,10 @@ class LabelContactsActivity : Activity() {
     private fun sms(number: String) =
         launch(Intent(Intent.ACTION_SENDTO, Uri.fromParts("smsto", number, null)))
 
-    private fun showMore(anchor: View, actions: List<AppAction>) {
-        val menu = PopupMenu(this, anchor)
-        actions.forEachIndexed { index, action -> menu.menu.add(0, index, index, action.title()) }
-        menu.setOnMenuItemClickListener { launch(actions[it.itemId].intent()); true }
-        menu.show()
+    private fun showMore(item: Item, actions: List<AppAction>) {
+        showMenu(item.name, actions.map { action ->
+            MenuEntry(copy(action.handler.icon), dp(style.appIconSize), action.shortTitle()) { launch(action.intent()) }
+        })
     }
 
     private fun openContact(item: Item) = launch(Intent(Intent.ACTION_VIEW, lookupUri(item)))
