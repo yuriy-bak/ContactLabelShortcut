@@ -1,4 +1,4 @@
-<p>Label Shortcut puts a home screen shortcut for a contact label. One tap opens all contacts with that label, for example "Family" or "Work".</p>
+<p>Contact Label Shortcut puts a home screen shortcut for a contact label. One tap opens all contacts with that label, for example "Family" or "Work".</p>
 
 <p><b>Features</b></p>
 <ul>
