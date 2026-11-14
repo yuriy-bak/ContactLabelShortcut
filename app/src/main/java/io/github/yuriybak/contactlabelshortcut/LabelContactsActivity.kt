@@ -72,6 +72,12 @@ class LabelContactsActivity : Activity() {
         title = intent.getStringExtra(Label.EXTRA_TITLE)
             ?: (if (permitted && groupId >= 0) loadTitle(groupId) else null)
             ?: getString(R.string.app_name)
+        // Settings in the place of the "up" button, left of the title
+        actionBar?.apply {
+            setDisplayHomeAsUpEnabled(true)
+            setHomeAsUpIndicator(tinted(R.drawable.ic_settings))
+            setHomeActionContentDescription(R.string.action_settings)
+        }
 
         val items = if (groupId >= 0 && permitted) load(groupId) else emptyList()
         style = Settings.listStyle(this)
@@ -135,25 +141,28 @@ class LabelContactsActivity : Activity() {
      * tapped, so a list that is not searched pays nothing for it.
      */
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        if (!::adapter.isInitialized) return false
+        addSearch(menu, tinted(R.drawable.ic_search))
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == android.R.id.home) {
+            startActivityForResult(Intent(this, MainActivity::class.java), REQUEST_SETTINGS)
+            return true
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    /** An icon in the color of the action bar icons. */
+    private fun tinted(res: Int): Drawable? {
         val tint = (actionBar?.themedContext ?: this)
             .obtainStyledAttributes(intArrayOf(android.R.attr.colorControlNormal)).run {
                 val color = getColorStateList(0)
                 recycle()
                 color
             }
-        fun tinted(res: Int) = getDrawable(res)?.mutate()?.apply { if (tint != null) setTintList(tint) }
-
-        if (::adapter.isInitialized) addSearch(menu, tinted(R.drawable.ic_search))
-
-        menu.add(Menu.NONE, R.id.action_settings, Menu.NONE, R.string.action_settings).apply {
-            icon = tinted(R.drawable.ic_settings)
-            setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM)
-            setOnMenuItemClickListener {
-                startActivityForResult(Intent(this@LabelContactsActivity, MainActivity::class.java), REQUEST_SETTINGS)
-                true
-            }
-        }
-        return true
+        return getDrawable(res)?.mutate()?.apply { if (tint != null) setTintList(tint) }
     }
 
     /** Back from the settings: show the list as they say now (buttons, gestures). */
