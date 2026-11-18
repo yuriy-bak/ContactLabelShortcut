@@ -65,7 +65,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew :app:lintDebug :app:testDebugUnitTest :app:assembleRelease --no-daemon
+        run: ./gradlew :app:lintDebug :app:testDebugUnitTest :app:assembleRelease :app:bundleRelease --no-daemon
 
       - name: Lint warnings
         if: always()
@@ -75,13 +75,18 @@ jobs:
         if: always()
         run: rm -f "$RUNNER_TEMP/release.jks"
 
-      - name: Rename APK
-        run: cp app/build/outputs/apk/release/app-release.apk "ContactLabelShortcut-${VERSION_NAME}.apk"
+      - name: Rename APK and AAB
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk "ContactLabelShortcut-${VERSION_NAME}.apk"
+          # App bundle for Google Play
+          cp app/build/outputs/bundle/release/app-release.aab "ContactLabelShortcut-${VERSION_NAME}.aab"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: apk
-          path: ContactLabelShortcut-*.apk
+          path: |
+            ContactLabelShortcut-*.apk
+            ContactLabelShortcut-*.aab
 
       # Lint and test reports, also when the build passes (lint warnings do not fail it)
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
@@ -105,6 +110,8 @@ jobs:
         with:
           tag_name: ${{ needs.build.outputs.tag }}
           target_commitish: ${{ github.sha }}
-          files: ContactLabelShortcut-*.apk
+          files: |
+            ContactLabelShortcut-*.apk
+            ContactLabelShortcut-*.aab
           generate_release_notes: true
           prerelease: ${{ contains(needs.build.outputs.tag, '-') }}
