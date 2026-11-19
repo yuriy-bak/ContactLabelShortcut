@@ -1,0 +1,1 @@
+Privacy policy added. Builds now include an app bundle for Google Play.
